@@ -217,13 +217,11 @@ process_precision:
                 base = 10;
                 goto number;
 
-                // (unsigned) octal
-            case 'o':
-                // Replace this with your code.
-                putch('X', putdat);
-                putch('X', putdat);
-                putch('X', putdat);
-                break;
+		// (unsigned) octal
+		case 'o':
+			num = getuint(&aq, lflag);
+			base = 8;
+			goto number;
 
                 // pointer
             case 'p':
