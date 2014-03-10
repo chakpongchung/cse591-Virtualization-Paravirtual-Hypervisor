@@ -191,11 +191,11 @@ boot_alloc(uint32_t n)
 #ifdef VMM_GUEST
         extern char end[];
         nextfree = ROUNDUP((char *) end, PGSIZE);
-		cprintf("Inside boot_alloc if nf = %x \n", nextfree);
+	//	cprintf("Inside boot_alloc if nf = %x \n", nextfree);
 #else
         extern uintptr_t end_debug;
         nextfree = ROUNDUP((char *) end_debug, PGSIZE);
-		cprintf("Inside boot_alloc else nf = %x \n", nextfree);
+	//	cprintf("Inside boot_alloc else nf = %x \n", nextfree);
 #endif
     }
 
@@ -315,8 +315,8 @@ x64_vm_init(void)
     //      the PA range [0, npages*PGSIZE - KERNBASE)
     // Permissions: kernel RW, user NONE
     // Your code goes here: 
-	cprintf("MAp pages  : npages = %d \n pagesize = %d \n Kernbase = %x \n boot_pml4e = %d \n ", npages, PGSIZE, KERNBASE, npages*PGSIZE - KERNBASE );
-	boot_map_segment(boot_pml4e, KERNBASE, npages*PGSIZE, 0x0, PTE_W | PTE_P);
+      // cprintf("MAp pages  : npages = %d \n pagesize = %d \n Kernbase = %x \n boot_pml4e = %d \n ", npages, PGSIZE, KERNBASE, npages*PGSIZE - KERNBASE );
+	boot_map_segment(boot_pml4e, (uintptr_t) KERNBASE, (npages * PGSIZE),(physaddr_t) 0x0, PTE_W | PTE_P);
 
     // Check that the initial page directory has been set up correctly.
     // Initialize the SMP-related parts of the memory map
@@ -333,7 +333,7 @@ x64_vm_init(void)
     /* check_page_free_list(1); */
     /* check_page_alloc(); */
     /* page_check(); */
-    /* check_page_free_list(0); */
+    check_page_free_list(0);
 }
 
 
