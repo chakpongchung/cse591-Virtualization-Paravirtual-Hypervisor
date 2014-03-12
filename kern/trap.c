@@ -165,17 +165,18 @@ trap_init_percpu(void)
 	// user space on that CPU.
 	//
 	// LAB 4: Your code here:
-
-	thiscpu->cpu_ts.ts_esp0 = KSTACKTOP - thiscpu->cpu_id * (KSTKSIZE + KSTKGAP);
-	SETTSS((struct SystemSegdesc64 *)(&(gdt[(GD_TSS0 >> 3)+thiscpu->cpu_id * 2])), // We want the TSS0 at 0x28, TSS1 at 0x38, TSS2 at 0x48, etc
+	ts.ts_esp0 = KSTACKTOP;
+	 SETTSS((struct SystemSegdesc64 *)((gdt_pd>>16)+40),STS_T64A, (uint64_t) (&ts),sizeof(struct Taskstate), 0);
+//	thiscpu->cpu_ts.ts_esp0 = KSTACKTOP - thiscpu->cpu_id * (KSTKSIZE + KSTKGAP);
+//	SETTSS((struct SystemSegdesc64 *)(&(gdt[(GD_TSS0 >> 3)+thiscpu->cpu_id * 2])), // We want the TSS0 at 0x28, TSS1 at 0x38, TSS2 at 0x48, etc
 										       // The size of gdt is 2*NCPU+5 because - 2bytes for tss of each cpu
 										       // and 5 bytes for unused(for catching null pointers), kernel code,
 										       // kernel  data, user code, user data.
-		STS_T64A, (uint64_t) (&(thiscpu->cpu_ts)), sizeof(struct Taskstate), 0);
+	//	STS_T64A, (uint64_t) (&(thiscpu->cpu_ts)), sizeof(struct Taskstate), 0);
 
 	// Load the TSS selector (like other segment selectors, the
 	// bottom three bits are special; we leave them 0)
-	ltr(GD_TSS0+(thiscpu->cpu_id * 8 * 2)); // Byte offset of TSSs
+	ltr(GD_TSS0); //+(thiscpu->cpu_id * 8 * 2)); // Byte offset of TSSs
 
 	// Load the IDT
 	lidt(&idt_pd);

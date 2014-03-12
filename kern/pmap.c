@@ -211,7 +211,7 @@ boot_alloc(uint32_t n)
 		if (PADDR((uintptr_t)ROUNDUP((nextfree + n), PGSIZE)) > (uint64_t)(npages * PGSIZE))
 			panic("Out of memory\n");
 		nextfree = ROUNDUP(nextfree + n, PGSIZE);
-			cprintf("result = %x \n", result);
+			// cprintf("result = %x \n", result);
 		return result;
 	}
 
@@ -246,7 +246,7 @@ x64_vm_init(void)
     pml4e = boot_alloc(PGSIZE);
     memset(pml4e, 0, PGSIZE);
     boot_pml4e = pml4e;
-	cprintf( " pml4e %x \n ", (uint64_t) pml4e );
+    //	cprintf( " pml4e %x \n ", (uint64_t) pml4e );
     boot_cr3 = PADDR(pml4e);
 
     //////////////////////////////////////////////////////////////////////
@@ -320,7 +320,7 @@ x64_vm_init(void)
 
     // Check that the initial page directory has been set up correctly.
     // Initialize the SMP-related parts of the memory map
-    mem_init_mp();
+    //mem_init_mp();
 
     check_boot_pml4e(boot_pml4e);
 
@@ -791,7 +791,7 @@ mmio_map_region(physaddr_t pa, size_t size)
 		boot_map_segment(boot_pml4e, base, rounded_size, pa, PTE_P | PTE_W | PTE_PCD | PTE_PWT);
 		base = (uintptr_t)((char*)base + rounded_size);
 	}
-	else
+	else 
 		panic("mmio_map_region failed: size is exceeding limit");
 
 	return (void*)((char*)base - rounded_size);
@@ -1288,7 +1288,7 @@ page_check(void)
     assert(check_va2pa(boot_pml4e, mm1) == 0);
     assert(check_va2pa(boot_pml4e, mm1+PGSIZE) == PGSIZE);
     assert(check_va2pa(boot_pml4e, mm2) == 0);
-    cprintf("failing %x %x\n", mm2+PGSIZE, check_va2pa(boot_pml4e, mm2+PGSIZE));
+    //cprintf("failing %x %x\n", mm2+PGSIZE, check_va2pa(boot_pml4e, mm2+PGSIZE));
     assert(check_va2pa(boot_pml4e, mm2+PGSIZE) == ~0);
     // check permissions
     assert(*pml4e_walk(boot_pml4e, (void*) mm1, 0) & (PTE_W|PTE_PWT|PTE_PCD));

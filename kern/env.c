@@ -181,7 +181,7 @@ env_setup_vm(struct Env *e)
 	struct Page *p=NULL, *pdpe_env_page=NULL, *pgdir_env_page = NULL;
 
     // Allocate a page for the page directory
-    if (!(p = page_alloc(0)))
+    if (!(p = page_alloc(ALLOC_ZERO)))
         return -E_NO_MEM;
 
     // Now, set e->env_pgdir and initialize the page directory.
@@ -209,8 +209,8 @@ env_setup_vm(struct Env *e)
 	e->env_pml4e = (pml4e_t *) page2kva(p);
 	e->env_cr3 = page2pa(p);
 	
-	memset( pml4e_p, 0, 4096 );
-	cprintf("(ENV e )  %x \n", page2kva(p));
+	//memset( pml4e_p, 0, 4096 );
+        //	cprintf("(ENV e )  %x \n", page2kva(p));
 
 	if(!(e->env_pml4e[PML4(UTOP)]&PTE_P))							//is the pdpe page entry empty
 	{
@@ -221,14 +221,14 @@ env_setup_vm(struct Env *e)
 		memset(pp, 0, sizeof(*pp));
 		pp->pp_ref++;
 		pdpe = (pdpe_t *) page2pa(pp);
-		memset( (pdpe_t *) page2kva(pp), 0, 4096 );
+		//memset( (pdpe_t *) page2kva(pp), 0, 4096 );
 		e->env_pml4e[PML4(UTOP)] = (uint64_t) pdpe | PTE_P | PTE_U | PTE_W;
-		cprintf("(ENV e for pp )  %x \n", page2kva(pp));
+	//	cprintf("(ENV e for pp )  %x \n", page2kva(pp));
 	}
 
-	cprintf("(UTOP)  %x \n", UTOP);
-        cprintf("PML4(UTOP)  %x \n", PML4(UTOP));
-	cprintf("KADDR value %x \n", (e->env_pml4e[PML4(UTOP)] ));
+	//cprintf("(UTOP)  %x \n", UTOP);
+        //cprintf("PML4(UTOP)  %x \n", PML4(UTOP));
+	//cprintf("KADDR value %x \n", (e->env_pml4e[PML4(UTOP)] ));
 	//pdpe entry exists so read it
 	pdpe_t *pdpe = (pdpe_t *) KADDR(pml4e_p[PML4(UTOP)] & ~0xFFF);
 	if(!(pdpe[PDPE(UTOP)] & PTE_P))
@@ -240,7 +240,7 @@ env_setup_vm(struct Env *e)
 		memset(pp, 0, sizeof(*pp));
 		pp->pp_ref++;
 		pgdir = (pde_t*) page2pa(pp);
-		memset( (pde_t *) page2kva(pp), 0, 4096 );
+		//memset( (pde_t *) page2kva(pp), 0, 4096 );
 		pdpe[PDPE(UTOP)] = (uint64_t) pgdir | PTE_P | PTE_W | PTE_U;
 		
 
