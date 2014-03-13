@@ -579,7 +579,7 @@ load_icode(struct Env *e, uint8_t *binary)
 	e->env_tf.tf_rip = elf->e_entry;
 
     // LAB 3: Your code here.
-   //phani  e->elf = binary;
+   	e->elf = binary;
 }
 
 //
@@ -764,7 +764,7 @@ env_run(struct Env *e)
 	curenv = e;
 	curenv->env_status = ENV_RUNNING;
 	curenv->env_runs++;
-//phani 	unlock_kernel();
+ 	//unlock_kernel();
 
 	lcr3(curenv->env_cr3);
 	env_pop_tf(&(curenv->env_tf));
