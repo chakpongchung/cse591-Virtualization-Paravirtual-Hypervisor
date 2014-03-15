@@ -15,7 +15,7 @@
 #define BOOT_PAGE_TABLE_START 0xf0008000
 #define BOOT_PAGE_TABLE_END   0xf000e000
 
-// These variables are set by i386_detect_memory()
+ // These variables are set by i386_detect_memory()
 size_t npages;			// Amount of physical memory (in pages)
 static size_t npages_basemem;	// Amount of base memory (in pages)
 
