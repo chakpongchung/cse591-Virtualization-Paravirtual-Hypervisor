@@ -211,7 +211,7 @@ boot_alloc(uint32_t n)
 		if (PADDR((uintptr_t)ROUNDUP((nextfree + n), PGSIZE)) > (uint64_t)(npages * PGSIZE))
 			panic("Out of memory\n");
 		nextfree = ROUNDUP(nextfree + n, PGSIZE);
-			cprintf("result = %x \n", result);
+		//cprintf("result = %x \n", result);
 		return result;
 	}
 
@@ -244,10 +244,10 @@ x64_vm_init(void)
     // create initial page directory.
     //panic("x64_vm_init: this function is not finished\n");
     pml4e = boot_alloc(PGSIZE);
-	cprintf("pml4 :%p\n", pml4e); 
+//	cprintf("pml4 :%p\n", pml4e); 
     memset(pml4e, 0, PGSIZE);
     boot_pml4e = pml4e;
-	cprintf( " pml4e %p \n ", (uint64_t) pml4e );
+//	cprintf( " pml4e %p \n ", (uint64_t) pml4e );
         //nextfree = ROUNDUP((char *) end, PGSIZE);
     boot_cr3 = PADDR(pml4e);
 
