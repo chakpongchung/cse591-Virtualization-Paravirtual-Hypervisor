@@ -17,7 +17,7 @@
 #include <inc/string.h>
 
 extern uintptr_t gdtdesc_64;
-struct Taskstate ts;
+static struct Taskstate ts;
 extern struct Segdesc gdt[];
 extern long gdt_pd;
 

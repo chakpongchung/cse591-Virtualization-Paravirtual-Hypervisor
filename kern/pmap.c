@@ -190,11 +190,11 @@ boot_alloc(uint32_t n)
     if (!nextfree) {
 #ifdef VMM_GUEST
         extern char end[];
-        nextfree = ROUNDUP((char *) end, PGSIZE);
+        nextfree = (char *)ROUNDUP(end, PGSIZE);
 	//	cprintf("Inside boot_alloc if nf = %x \n", nextfree);
 #else
         extern uintptr_t end_debug;
-        nextfree = ROUNDUP((char *) end_debug, PGSIZE);
+        nextfree = (char *)ROUNDUP(end_debug, PGSIZE);
 	//	cprintf("Inside boot_alloc else nf = %x \n", nextfree);
 #endif
     }
@@ -244,9 +244,11 @@ x64_vm_init(void)
     // create initial page directory.
     //panic("x64_vm_init: this function is not finished\n");
     pml4e = boot_alloc(PGSIZE);
+	cprintf("pml4 :%p\n", pml4e); 
     memset(pml4e, 0, PGSIZE);
     boot_pml4e = pml4e;
-	cprintf( " pml4e %x \n ", (uint64_t) pml4e );
+	cprintf( " pml4e %p \n ", (uint64_t) pml4e );
+        //nextfree = ROUNDUP((char *) end, PGSIZE);
     boot_cr3 = PADDR(pml4e);
 
     //////////////////////////////////////////////////////////////////////
@@ -1288,7 +1290,7 @@ page_check(void)
     assert(check_va2pa(boot_pml4e, mm1) == 0);
     assert(check_va2pa(boot_pml4e, mm1+PGSIZE) == PGSIZE);
     assert(check_va2pa(boot_pml4e, mm2) == 0);
-    cprintf("failing %x %x\n", mm2+PGSIZE, check_va2pa(boot_pml4e, mm2+PGSIZE));
+    //cprintf("failing %x %x\n", mm2+PGSIZE, check_va2pa(boot_pml4e, mm2+PGSIZE));
     assert(check_va2pa(boot_pml4e, mm2+PGSIZE) == ~0);
     // check permissions
     assert(*pml4e_walk(boot_pml4e, (void*) mm1, 0) & (PTE_W|PTE_PWT|PTE_PCD));

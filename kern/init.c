@@ -84,6 +84,19 @@ i386_init(void)
 	// Start fs.
 	//ENV_CREATE(fs_fs, ENV_TYPE_FS);
 	ENV_CREATE(user_hello, ENV_TYPE_USER);
+	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
+	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//	ENV_CREATE(user_dumbfork, ENV_TYPE_USER);
+	//	ENV_CREATE(user_faultread, ENV_TYPE_USER);
+	//	ENV_CREATE(user_faultdie, ENV_TYPE_USER);
+	//	ENV_CREATE(user_faultalloc, ENV_TYPE_USER);
+	//ENV_CREATE(user_forktree, ENV_TYPE_USER);
+	ENV_CREATE(user_sendpage, ENV_TYPE_USER);
+	ENV_CREATE(user_pingpong, ENV_TYPE_USER);
+	ENV_CREATE(user_primes, ENV_TYPE_USER);
+
 
 #if defined(TEST)
 	// Don't touch -- used by grading script!

@@ -57,7 +57,18 @@ KERN_SRCFILES +=	vmm/ept.c \
 KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
 
 # Binary program images to embed within the kernel.
-KERN_BINFILES :=	user/hello
+KERN_BINFILES :=	user/hello \
+			user/buggyhello \
+                        user/evilhello \
+                        user/yield \
+                        user/dumbfork \
+                        user/faultread \
+                        user/faultalloc \
+                        user/pingpong \
+                        user/sendpage \
+                        user/primes \
+                        user/forktree 
+                        
 KERN_BINFILES += user/idle
 # Binary files for LAB5
 KERN_BINFILES +=	user/testfile \
