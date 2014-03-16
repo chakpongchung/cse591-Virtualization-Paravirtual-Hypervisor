@@ -82,7 +82,7 @@ i386_init(void)
 		ENV_CREATE(user_idle, ENV_TYPE_IDLE);
 
 	// Start fs.
-	//ENV_CREATE(fs_fs, ENV_TYPE_FS);
+	ENV_CREATE(fs_fs, ENV_TYPE_FS);
 	ENV_CREATE(user_hello, ENV_TYPE_USER);
 	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
@@ -95,7 +95,8 @@ i386_init(void)
 	//ENV_CREATE(user_forktree, ENV_TYPE_USER);
 	ENV_CREATE(user_sendpage, ENV_TYPE_USER);
 	ENV_CREATE(user_pingpong, ENV_TYPE_USER);
-	ENV_CREATE(user_primes, ENV_TYPE_USER);
+	//ENV_CREATE(user_primes, ENV_TYPE_USER);
+	ENV_CREATE(user_icode, ENV_TYPE_USER);
 
 
 #if defined(TEST)
@@ -103,7 +104,6 @@ i386_init(void)
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	//ENV_CREATE(user_icode, ENV_TYPE_USER);
 #endif // TEST*
 
 	// Should not be necessary - drains keyboard because interrupt has given up.

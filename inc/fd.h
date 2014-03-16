@@ -6,7 +6,7 @@
 #define JOS_INC_FD_H
 
 #include <inc/types.h>
-#include <inc/fs.h>
+//#include <inc/fs.h>
 
 struct Fd;
 struct Stat;

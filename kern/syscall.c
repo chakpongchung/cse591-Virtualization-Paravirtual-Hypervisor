@@ -4,6 +4,7 @@
 #include <inc/error.h>
 #include <inc/string.h>
 #include <inc/assert.h>
+#include <inc/fs.h>
 
 #include <kern/env.h>
 #include <kern/pmap.h>
@@ -151,6 +152,15 @@ sys_env_set_trapframe(envid_t envid, struct Trapframe *tf)
     // LAB 5: Your code here.
     // Remember to check whether the user has supplied us with a good
     // address!
+	struct Env *env;
+    int err = envid2env(envid, &env, 1);
+    if (err < 0)
+            return err;
+    else if (err == 0) {
+            user_mem_assert(env, tf, sizeof(struct Trapframe),PTE_P|PTE_U);
+            env->env_tf = *tf;
+            return 0;
+    }
     panic("sys_env_set_trapframe not implemented");
 }
 

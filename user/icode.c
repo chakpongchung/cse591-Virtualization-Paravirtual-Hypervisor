@@ -1,12 +1,13 @@
 #include <inc/lib.h>
-
+/*
 #ifdef VMM_GUEST
 #define MOTD "/motd_guest"
 #else
 #define MOTD "/motd"
 #endif
-
-    void
+*/
+#define MOTD "/motd"
+void
 umain(int argc, char **argv)
 {
     int fd, n, r;
