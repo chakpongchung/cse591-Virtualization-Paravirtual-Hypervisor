@@ -67,7 +67,7 @@ KERN_BINFILES :=	user/hello \
                         user/pingpong \
                         user/sendpage \
                         user/primes \
-                        user/forktree 
+                        user/forktree
                         
 KERN_BINFILES += user/idle
 # Binary files for LAB5

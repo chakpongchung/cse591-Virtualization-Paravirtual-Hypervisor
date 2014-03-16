@@ -162,10 +162,10 @@ try_open:
     if (debug)
         cprintf("sending success, page %08x\n", (uintptr_t) o->o_fd);
 
-    // Share the FD page with the caller
-    *pg_store = o->o_fd;
-    *perm_store = PTE_P|PTE_U|PTE_W;
-    return 0;
+	// Share the FD page with the caller
+	*pg_store = o->o_fd;
+	*perm_store = PTE_P|PTE_U|PTE_W|PTE_SHARE;
+	return 0;
 }
 
 // Set the size of req->req_fileid to req->req_size bytes, truncating

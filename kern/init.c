@@ -97,6 +97,7 @@ i386_init(void)
 	ENV_CREATE(user_pingpong, ENV_TYPE_USER);
 	//ENV_CREATE(user_primes, ENV_TYPE_USER);
 	ENV_CREATE(user_icode, ENV_TYPE_USER);
+	//ENV_CREATE(user_console, ENV_TYPE_USER);
 
 
 #if defined(TEST)
