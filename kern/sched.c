@@ -45,6 +45,7 @@ sched_yield(void)
 
     // LAB 4: Your code here.
 
+
 	if (curenv) {
         	for (i = ENVX(curenv->env_id)+1; i != ENVX(curenv->env_id); i = (i+1)%NENV) {
                 	if (envs[i].env_type != ENV_TYPE_IDLE && 
@@ -63,6 +64,14 @@ sched_yield(void)
 			env_run(&envs[i]);
 	}
 
+    for (i = 0; i < NENV; i++) {
+        if (envs[i].env_type == ENV_TYPE_GUEST && envs[i].env_status == ENV_RUNNABLE)
+        {
+            cprintf("Found and Env Guest");
+            if ( !vmxon())
+                env_run(&envs[i]);
+        }
+    }
     // For debugging and testing purposes, if there are no
     // runnable environments other than the idle environments,
     // drop into the kernel monitor.

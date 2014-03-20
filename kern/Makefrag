@@ -93,6 +93,7 @@ KERN_BINFILES +=	user/testpteshare \
 			user/testpiperace2 \
 			user/primespipe \
 			user/testkbd \
+			user/vmm \
 			user/testshell
 
 KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))

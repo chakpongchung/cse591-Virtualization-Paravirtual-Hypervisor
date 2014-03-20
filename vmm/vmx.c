@@ -28,8 +28,13 @@ static inline bool vmx_check_support() {
     uint32_t eax, ebx, ecx, edx;
     cpuid( 1, &eax, &ebx, &ecx, &edx );
     /* Your code here */ 
-    panic ("vmx check not implemented\n");
-    return false;
+    if ( BIT( ecx, 5) == 1)
+        return true;
+    else
+    {
+        panic ("vmx check not implemented\n");
+        return false;
+    }
 }
 
 /* This function reads the VMX-specific MSRs
@@ -47,8 +52,13 @@ static inline bool vmx_check_support() {
  */
 static inline bool vmx_check_ept() {
     /* Your code here */
-    panic ("ept check not implemented\n");
-    return false;
+    if ( BIT( read_msr(IA32_VMX_PROCBASED_CTLS), 31) == 1 && BIT( read_msr(IA32_VMX_PROCBASED_CTLS2), 1) == 1 )
+        return true;
+    else
+    {
+        panic ("ept check not implemented\n");
+        return false;
+    }
 }
 
 /* Checks if curr_val is compatible with fixed0 and fixed1 
@@ -113,7 +123,7 @@ int vmx_init_vmxon() {
     } else if ( !vmx_check_ept() ) {
        return -E_NO_EPT;
     } 
-    
+    cprintf("VMX Support Check successful..............\n");
     //Alocate mem and init the VMXON region.
     struct Page *p_vmxon_region = vmx_init_vmcs();
     if(!p_vmxon_region)

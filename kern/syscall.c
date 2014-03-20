@@ -567,6 +567,8 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 			return sys_env_set_trapframe(a1, (struct Trapframe*)a2);
 		case SYS_time_msec:
 			return sys_time_msec();
+		case SYS_env_mkguest:
+			return sys_env_mkguest(a1, a2);
 		/*case SYS_env_transmit_packet:
 			return sys_env_transmit_packet(a1, (char*)a2, a3);
 		case SYS_env_receive_packet:
@@ -574,6 +576,7 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 		case SYS_get_block_info:
 			return sys_get_block_info();*/
 		default:
+                        panic ("Sys call not implemented");
 			return -E_INVAL;
 			break;
 	}
