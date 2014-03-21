@@ -48,9 +48,124 @@ static inline int epte_present(epte_t epte)
 static int ept_lookup_gpa(epte_t* eptrt, void *gpa, 
 			  int create, epte_t **epte_out) {
     /* Your code here */
-    panic("ept_lookup_gpa not implemented\n");
-    return 0;
+    epte_t * epte;
+    int ret;
+    
+    if(!eptrt)
+	return E_INVAL;
+    else
+	return ept_pml4e_walk(eptrt, gpa, create, epte_out);
 
+    //panic("ept_lookup_gpa not implemented\n");
+    //return 0;
+
+}
+
+int 
+ept_pml4e_walk(epte_t *eptrt, const void *gpa, int create, epte_t **epte_out)
+{
+	uintptr_t index_in_ept_pml4t = PML4(va);
+	epte_t *offsetd_ptr_in_pml4t = eptrt + index_in_ept_pml4t;
+	epte_t *pdpt_base = (epte_t*)(PTE_ADDR(*offsetd_ptr_in_pml4t));
+	int ret = 0;
+	// Check if PDP does exists
+	if (pdpt_base == NULL) {
+		if (!create) return E_NO_ENT;
+		else {
+			struct Page *newPage = page_alloc(ALLOC_ZERO);
+
+			if (newPage == NULL) return E_NO_MEM; // Out of memory
+
+			newPage->pp_ref++;
+			pdpt_base = (epte_t*)page2pa(newPage);
+			ret = ept_pdpe_walk((epte_t*)page2kva(newPage), gpa, create, epte_out);
+
+			if (ret < 0)
+				page_decref(newPage); // Free allocated page for PDPE
+			else {
+				*offsetd_ptr_in_ept_pml4t = ((uint64_t)pdpt_base) | PTE_P | PTE_U | PTE_W;
+			}
+			return ret;
+		}
+	}
+	else 
+		return ept_pdpe_walk(KADDR((uint64_t)pdpt_base), gpa, create, epte_out); // PDP exists, so walk through it.
+
+	return NULL;
+}
+
+int ept_pdpe_walk(epte_t *pdpt_base,const void *gpa,int create, epte_t **epte_out)
+{
+        uintptr_t index_in_pdpt = PDPE(gpa);
+        epte_t *offsetd_ptr_in_pdpt = pdpt_base + index_in_pdpt;
+        epte_t *pgdir_base = (pde_t*) PTE_ADDR(*offsetd_ptr_in_pdpt);
+
+	//Check if PD exists
+        if (pgdir_base == NULL)
+        {
+                if (create == 0) return E_NO_ENT;
+                else {
+                        struct Page *newPage = page_alloc(ALLOC_ZERO);
+
+                        if (newPage == NULL) return E_NO_MEM;
+
+                        newPage->pp_ref++;
+                        pgdir_base = (epte_t*)page2pa(newPage);
+                        ret = ept_pgdir_walk(page2kva(newPage), va, create, epte_out);
+
+                        if (ret < 0) page_decref(newPage); // Free allocated page for PDE
+                        else {
+                                *offsetd_ptr_in_pdpt = ((uint64_t)pgdir_base) | PTE_P | PTE_U | PTE_W;
+                                //*ept_out = offsetd_ptr_in_pdpt;
+                        }
+			return ret;
+               }
+        }
+        else
+                return ept_pgdir_walk(KADDR((uint64_t)pgdir_base), va, create, epte_out); // PD is present, so walk through it
+
+	return NULL;
+}
+// Given 'pgdir', a pointer to a page directory, pgdir_walk returns
+// a pointer to the page table entry (PTE). 
+// The programming logic and the hints are the same as pml4e_walk
+// and pdpe_walk.
+
+int 
+ept_pgdir_walk(pde_t *pgdir_base, const void *va, int create, epte_t **epte_out)
+{
+        uintptr_t index_in_pgdir = PDX(va);
+        epte_t *offsetd_ptr_in_pgdir = pgdir_base + index_in_pgdir;
+        epte_t *page_table_base = (epte_t*)(PTE_ADDR(*offsetd_ptr_in_pgdir));
+
+	//Check if PT exists
+        if (page_table_base == NULL) {
+                if (create == 0) return E_NO_ENT;
+                else {
+                        struct Page *newPage = page_alloc(ALLOC_ZERO);
+
+                        if (newPage == NULL) return E_NO_MEM;
+
+                        newPage->pp_ref++;
+                        page_table_base = (epte_t*)page2pa(newPage);
+						*offsetd_ptr_in_pgdir = ((uint64_t)page_table_base) | PTE_P | PTE_W | PTE_U;
+
+			// Return PTE
+		        uintptr_t index_in_page_table = PTX(va);
+		        pte_t *offsetd_ptr_in_page_table = page_table_base + index_in_page_table;
+				*epte_out = (epte_t*)KADDR((uint64_t)offsetd_ptr_in_page_table);
+				return 0;
+		}
+        }
+        else {
+		// PT exists, so return PTE
+	        uintptr_t index_in_page_table = PTX(va);
+        	pte_t *offsetd_ptr_in_page_table = page_table_base + index_in_page_table;
+			*epte_out = (epte_t*)KADDR((uint64_t)offsetd_ptr_in_page_table);
+			return 0;
+		}
+
+	return NULL;
 }
 
 void ept_gpa2hva(epte_t* eptrt, void *gpa, void **hva) {
