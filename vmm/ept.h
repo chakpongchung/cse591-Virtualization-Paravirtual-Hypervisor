@@ -13,6 +13,10 @@ int ept_alloc_static(epte_t *eptrt, struct VmxGuestInfo *ginfo);
 void free_guest_mem(epte_t* eptrt);
 void ept_gpa2hva(epte_t* eptrt, void *gpa, void **hva);
 int ept_page_insert(epte_t* eptrt, struct Page* pp, void* gpa, int perm);
+int ept_pml4e_walk(epte_t *eptrt, const void *gpa, int create, epte_t **epte_out);
+int ept_pdpe_walk(epte_t *pdpt_base,const void *gpa,int create, epte_t **epte_out);
+int ept_pgdir_walk(pde_t *pgdir_base, const void *gpa, int create, epte_t **epte_out);
+
 
 #define EPT_LEVELS 4
 
