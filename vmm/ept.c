@@ -1,11 +1,10 @@
-
 #include <vmm/ept.h>
 
 #include <inc/error.h>
 #include <inc/memlayout.h>
 #include <kern/pmap.h>
 #include <inc/string.h>
-
+#include <kern/env.h>
 // Return the physical address of an ept entry
 static inline uintptr_t epte_addr(epte_t epte)
 {
@@ -235,9 +234,35 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
         int overwrite) {
 
     /* Your code here */
-    panic("ept_map_hva2gpa not implemented\n");
+    physaddr_t hpa = 0;
+    pte_t *pte = NULL;
+    int ret = 0;
+    page_lookup(curenv->env_pml4e, hva, &pte);
+    
+    hpa = PTE_ADDR(*pte);
 
-    return 0;
+    ret = ept_lookup_gpa(eptrt, gpa, 1, (epte_t**)&pte);
+    if(!ret)
+    {
+        if(*pte)
+        {
+            if(overwrite)
+            {
+                *pte = (pte_t)hva | perm;
+                return 0;
+            }
+            else
+                return -E_INVAL;
+        }
+        else
+        {
+                *pte = (pte_t)hva | perm;
+                return 0;
+        }
+    }
+    return ret;
+    //panic("ept_map_hva2gpa not implemented\n");
+
 }
 
 int ept_alloc_static(epte_t *eptrt, struct VmxGuestInfo *ginfo) {
