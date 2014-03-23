@@ -65,7 +65,7 @@ sched_yield(void)
 	}
 
     for (i = 0; i < NENV; i++) {
-        if (envs[i].env_type == ENV_TYPE_GUEST && envs[i].env_status == ENV_RUNNABLE)
+        if (envs[i].env_type == ENV_TYPE_GUEST)// && envs[i].env_status == ENV_RUNNABLE)
         {
             cprintf("Found and Env Guest");
             if ( !vmxon())
