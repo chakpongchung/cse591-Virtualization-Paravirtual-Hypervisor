@@ -51,7 +51,7 @@ static int ept_lookup_gpa(epte_t* eptrt, void *gpa,
     int ret;
     
     if(!eptrt)
-	return E_INVAL;
+	return -E_INVAL;
     else
 	return ept_pml4e_walk(eptrt, gpa, create, epte_out);
 
@@ -69,11 +69,11 @@ ept_pml4e_walk(epte_t *eptrt, const void *gpa, int create, epte_t **epte_out)
 	int ret = 0;
 	// Check if PDP does exists
 	if (pdpt_base == NULL) {
-		if (!create) return E_NO_ENT;
+		if (!create) return -E_NO_ENT;
 		else {
 			struct Page *newPage = page_alloc(ALLOC_ZERO);
 
-			if (newPage == NULL) return E_NO_MEM; // Out of memory
+			if (newPage == NULL) return -E_NO_MEM; // Out of memory
 
 			newPage->pp_ref++;
 			pdpt_base = (epte_t*)page2pa(newPage);
@@ -137,11 +137,11 @@ ept_pgdir_walk(pde_t *pgdir_base, const void *gpa, int create, epte_t **epte_out
 
 	//Check if PT exists
         if (page_table_base == NULL) {
-                if (create == 0) return E_NO_ENT;
+                if (create == 0) return -E_NO_ENT;
                 else {
                         struct Page *newPage = page_alloc(ALLOC_ZERO);
 
-                        if (newPage == NULL) return E_NO_MEM;
+                        if (newPage == NULL) return -E_NO_MEM;
 
                         newPage->pp_ref++;
                         page_table_base = (epte_t*)page2pa(newPage);
@@ -239,6 +239,9 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
     int ret = 0;
     page_lookup(curenv->env_pml4e, hva, &pte);
     
+    if (!(*pte & perm & PTE_W))
+        return -E_INVAL;
+
     hpa = PTE_ADDR(*pte);
 
     ret = ept_lookup_gpa(eptrt, gpa, 1, (epte_t**)&pte);
@@ -248,7 +251,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
         {
             if(overwrite)
             {
-                *pte = (pte_t)hva | perm;
+                *pte = (pte_t)hpa | perm;
                 return 0;
             }
             else
@@ -256,7 +259,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
         }
         else
         {
-                *pte = (pte_t)hva | perm;
+                *pte = (pte_t)hpa | perm;
                 return 0;
         }
     }
@@ -281,4 +284,69 @@ int ept_alloc_static(epte_t *eptrt, struct VmxGuestInfo *ginfo) {
     }
     return 0;
 }
+
+#ifdef TEST_EPT_MAP
+#include <kern/env.h>
+#include <kern/syscall.h>
+int _export_sys_ept_map(envid_t srcenvid, void *srcva,
+	    envid_t guest, void* guest_pa, int perm);
+
+int test_ept_map(void)
+{
+	struct Env *srcenv, *dstenv;
+	struct Page *pp;
+	epte_t *epte;
+	int r;
+
+	/* Initialize source env */
+	if ((r = env_alloc(&srcenv, 0)) < 0)
+		panic("Failed to allocate env (%d)\n", r);
+	if (!(pp = page_alloc(ALLOC_ZERO)))
+		panic("Failed to allocate page (%d)\n", r);
+	if ((r = page_insert(srcenv->env_pml4e, pp, UTEMP, 0)) < 0)
+		panic("Failed to insert page (%d)\n", r);
+	curenv = srcenv;
+
+	/* 1. Check if sys_ept_map correctly verify the target env */
+	if ((r = env_alloc(&dstenv, srcenv->env_id)) < 0)
+		panic("Failed to allocate env (%d)\n", r);
+	if ((r = _export_sys_ept_map(srcenv->env_id, UTEMP, dstenv->env_id, UTEMP, 0)) < 0)
+		cprintf("EPT map to non-guest env failed as expected (%d).\n", r);
+	else
+		panic("sys_ept_map success on non-guest env.\n");
+
+	/*env_destroy(dstenv);*/
+
+	if ((r = env_guest_alloc(&dstenv, srcenv->env_id)) < 0)
+		panic("Failed to allocate guest env (%d)\n", r);
+	dstenv->env_vmxinfo.phys_sz = (uint64_t)UTEMP;
+
+	/* 2. Check if sys_ept_map can verify guest phys_sz correctly */
+	if ((r = _export_sys_ept_map(srcenv->env_id, UTEMP, dstenv->env_id, UTEMP + PGSIZE, 0)) < 0)
+		cprintf("EPT map to out-of-boundary area failed as expected (%d).\n", r);
+	else
+		panic("sys_ept_map success on out-of-boundary area\n");
+
+	/* 3. Check if the sys_ept_map can succeed on correct setup */
+	if ((r = _export_sys_ept_map(srcenv->env_id, UTEMP, dstenv->env_id, UTEMP, 0)) < 0)
+		panic("Failed to do sys_ept_map (%d)\n", r);
+	else
+		cprintf("sys_ept_map finished normally.\n");
+
+	/* 4. Check if the mapping is valid */
+	if ((r = ept_lookup_gpa(dstenv->env_pml4e, UTEMP, 0, &epte)) < 0)
+		panic("Failed on ept_lookup_gpa (%d)\n", r);
+	if (page2pa(pp) != (epte_addr(*epte)))
+		panic("EPT mapping address mismatching (%x vs %x).\n",
+				page2pa(pp), epte_addr(*epte));
+	else
+		cprintf("EPT mapping address looks good: %x vs %x.\n",
+				page2pa(pp), epte_addr(*epte));
+
+	/* stop running after test, as this is just a test run. */
+	panic("Cheers! sys_ept_map seems to work correctly.\n");
+
+	return 0;
+}
+#endif
 

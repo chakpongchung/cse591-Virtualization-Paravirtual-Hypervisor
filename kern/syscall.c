@@ -508,7 +508,20 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 	    envid_t guest, void* guest_pa, int perm)
 {
     /* Your code here */
-    panic ("sys_ept_map not implemented");
+    struct Env *env;
+    int ret = 0;
+    if( (uint64_t)srcva >= UTOP)
+        return -E_INVAL;
+    ret = envid2env(guest, &env, 1);
+    if(!ret)
+    {
+        if ((uint64_t)guest_pa + PGSIZE > env->env_vmxinfo.phys_sz)
+            return -E_INVAL;
+        ret = ept_map_hva2gpa(env->env_pml4e, srcva, guest_pa, perm, 1);
+        return ret;
+    }
+    else
+        return -E_BAD_ENV;
     return 0;
 }
 
@@ -569,6 +582,8 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 			return sys_time_msec();
 		case SYS_env_mkguest:
 			return sys_env_mkguest(a1, a2);
+        case SYS_ept_map:
+	    	return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
 		/*case SYS_env_transmit_packet:
 			return sys_env_transmit_packet(a1, (char*)a2, a3);
 		case SYS_env_receive_packet:
@@ -583,4 +598,13 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 
 	return 0;
 }
+
+#ifdef TEST_EPT_MAP
+int
+_export_sys_ept_map(envid_t srcenvid, void *srcva,
+	    envid_t guest, void* guest_pa, int perm)
+{
+	return sys_ept_map(srcenvid, srcva, guest, guest_pa, perm);
+}
+#endif
 

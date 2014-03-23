@@ -52,7 +52,7 @@ static inline bool vmx_check_support() {
  */
 static inline bool vmx_check_ept() {
     /* Your code here */
-    if ( BIT( read_msr(IA32_VMX_PROCBASED_CTLS), 31) == 1 && BIT( read_msr(IA32_VMX_PROCBASED_CTLS2), 1) == 1 )
+    if ( BIT( read_msr(IA32_VMX_PROCBASED_CTLS), 63) == 1 && BIT( read_msr(IA32_VMX_PROCBASED_CTLS2), 33) == 1 )
         return true;
     else
     {
