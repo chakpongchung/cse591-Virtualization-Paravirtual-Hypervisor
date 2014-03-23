@@ -57,23 +57,23 @@ i386_init(void)
 
 #ifndef VMM_GUEST
 	// Lab 4 multiprocessor initialization functions
-	mp_init();
-	lapic_init();
+	//mp_init();
+	//lapic_init();
 #endif
 
 	// Lab 4 multitasking initialization functions
 	pic_init();
 
 	// Lab 6 hardware initialization functions
-	time_init();
-	pci_init();
+	//time_init();
+	//pci_init();
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
 
 #ifndef VMM_GUEST
 	// Starting non-boot CPUs
-	boot_aps();
+	//boot_aps();
 #endif
 
 	// Should always have idle processes at first.
@@ -83,6 +83,21 @@ i386_init(void)
 
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
+	ENV_CREATE(user_hello, ENV_TYPE_USER);
+	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
+	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//ENV_CREATE(user_yield, ENV_TYPE_USER);
+	//	ENV_CREATE(user_dumbfork, ENV_TYPE_USER);
+	//	ENV_CREATE(user_faultread, ENV_TYPE_USER);
+	//	ENV_CREATE(user_faultdie, ENV_TYPE_USER);
+	//	ENV_CREATE(user_faultalloc, ENV_TYPE_USER);
+	//ENV_CREATE(user_forktree, ENV_TYPE_USER);
+	//ENV_CREATE(user_sendpage, ENV_TYPE_USER);
+	//ENV_CREATE(user_pingpong, ENV_TYPE_USER);
+	//ENV_CREATE(user_primes, ENV_TYPE_USER);
+	//ENV_CREATE(user_icode, ENV_TYPE_USER);
+	//ENV_CREATE(user_console, ENV_TYPE_USER);
 
 #if !defined(TEST_NO_NS) && !defined(VMM_GUEST)
 	// Start ns.
@@ -94,7 +109,7 @@ i386_init(void)
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
 	// Touch all you want.
-	ENV_CREATE(user_icode, ENV_TYPE_USER);
+	//ENV_CREATE(user_icode, ENV_TYPE_USER);
 #endif // TEST*
 
 	// Should not be necessary - drains keyboard because interrupt has given up.
