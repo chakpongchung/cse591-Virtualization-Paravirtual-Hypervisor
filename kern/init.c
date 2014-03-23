@@ -4,6 +4,7 @@
 #include <inc/string.h>
 #include <inc/assert.h>
 #include <inc/memlayout.h>
+#include <vmm/ept.h>
 
 #include <kern/monitor.h>
 #include <kern/console.h>
@@ -19,9 +20,11 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/pci.h>
-#if defined(TEST_EPT_MAP)
-int test_ept_map(void);
-#endif
+//#if defined(TEST_EPT_MAP)
+//int test_ept_map(void);
+//#endif
+
+int test_ept_map();
 
 uint64_t end_debug;
 
@@ -39,7 +42,7 @@ i386_init(void)
 	// Clear the uninitialized global data (BSS) section of our program.
 	// This ensures that all static/global variables start out zero.
 	memset(edata, 0, end - edata);
-
+//        freeguestmem((epte_t*)6876786);
 	// Initialize the console.
 	// Can't call cprintf until after we do this!
 	cons_init();
@@ -78,7 +81,7 @@ i386_init(void)
 
 	// Lab 4 multitasking initialization functions
 	pic_init();
-
+        test_ept_map();
 	// Lab 6 hardware initialization functions
 	//time_init();
 	//pci_init();
@@ -119,6 +122,10 @@ i386_init(void)
 	// Don't touch -- used by grading script!
 	ENV_CREATE(TEST, ENV_TYPE_USER);
 #else
+#if defined(TEST_EPT_MAP)
+//	test_ept_map();
+#endif
+
 	// Touch all you want.
 #endif // TEST*
 

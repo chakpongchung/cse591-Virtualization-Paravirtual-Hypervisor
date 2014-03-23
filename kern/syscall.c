@@ -510,6 +510,7 @@ sys_ept_map(envid_t srcenvid, void *srcva,
     /* Your code here */
     struct Env *env;
     int ret = 0;
+
     if( (uint64_t)srcva >= UTOP)
         return -E_INVAL;
     ret = envid2env(guest, &env, 1);
@@ -599,12 +600,12 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 	return 0;
 }
 
-#ifdef TEST_EPT_MAP
+//#ifdef TEST_EPT_MAP
 int
 _export_sys_ept_map(envid_t srcenvid, void *srcva,
 	    envid_t guest, void* guest_pa, int perm)
 {
 	return sys_ept_map(srcenvid, srcva, guest, guest_pa, perm);
 }
-#endif
+//#endif
 

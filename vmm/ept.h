@@ -16,6 +16,9 @@ int ept_page_insert(epte_t* eptrt, struct Page* pp, void* gpa, int perm);
 int ept_pml4e_walk(epte_t *eptrt, const void *gpa, int create, epte_t **epte_out);
 int ept_pdpe_walk(epte_t *pdpt_base,const void *gpa,int create, epte_t **epte_out);
 int ept_pgdir_walk(pde_t *pgdir_base, const void *gpa, int create, epte_t **epte_out);
+int _export_sys_ept_map(envid_t srcenvid, void *srcva,envid_t guest, void* guest_pa, int perm);
+
+int test_ept_map(void);
 
 
 #define EPT_LEVELS 4

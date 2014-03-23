@@ -237,10 +237,15 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
     physaddr_t hpa = 0;
     pte_t *pte = NULL;
     int ret = 0;
+
     page_lookup(curenv->env_pml4e, hva, &pte);
-    
-    if (!(*pte & perm & PTE_W))
+
+    if(pte == NULL)
         return -E_INVAL;
+
+    if(perm & PTE_W) 
+        if(!(*pte & PTE_W))
+            return -E_INVAL;
 
     hpa = PTE_ADDR(*pte);
 
@@ -285,7 +290,7 @@ int ept_alloc_static(epte_t *eptrt, struct VmxGuestInfo *ginfo) {
     return 0;
 }
 
-#ifdef TEST_EPT_MAP
+//#ifdef TEST_EPT_MAP
 #include <kern/env.h>
 #include <kern/syscall.h>
 int _export_sys_ept_map(envid_t srcenvid, void *srcva,
@@ -319,7 +324,7 @@ int test_ept_map(void)
 
 	if ((r = env_guest_alloc(&dstenv, srcenv->env_id)) < 0)
 		panic("Failed to allocate guest env (%d)\n", r);
-	dstenv->env_vmxinfo.phys_sz = (uint64_t)UTEMP;
+	dstenv->env_vmxinfo.phys_sz = (uint64_t)(UTEMP + PGSIZE);
 
 	/* 2. Check if sys_ept_map can verify guest phys_sz correctly */
 	if ((r = _export_sys_ept_map(srcenv->env_id, UTEMP, dstenv->env_id, UTEMP + PGSIZE, 0)) < 0)
@@ -329,7 +334,10 @@ int test_ept_map(void)
 
 	/* 3. Check if the sys_ept_map can succeed on correct setup */
 	if ((r = _export_sys_ept_map(srcenv->env_id, UTEMP, dstenv->env_id, UTEMP, 0)) < 0)
+        {
+                cprintf("%d, %d\n", srcenv->env_id, dstenv->env_id);
 		panic("Failed to do sys_ept_map (%d)\n", r);
+        }
 	else
 		cprintf("sys_ept_map finished normally.\n");
 
@@ -348,5 +356,5 @@ int test_ept_map(void)
 
 	return 0;
 }
-#endif
+//#endif
 
