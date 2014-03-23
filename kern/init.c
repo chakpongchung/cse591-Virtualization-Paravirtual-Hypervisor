@@ -19,6 +19,9 @@
 #include <kern/spinlock.h>
 #include <kern/time.h>
 #include <kern/pci.h>
+#if defined(TEST_EPT_MAP)
+int test_ept_map(void);
+#endif
 
 uint64_t end_debug;
 
@@ -42,6 +45,18 @@ i386_init(void)
 	cons_init();
 
 	cprintf("6828 decimal is %o octal!\n", 6828);
+
+#ifdef VMM_GUEST
+	/* Guest VMX extension exposure check */
+	{
+		uint32_t ecx = 0;
+		cpuid(0x1, NULL, NULL, &ecx, NULL);
+		if (ecx & 0x20)
+			panic("[ERR] VMX extension exposed to guest.\n");
+		else
+			cprintf("VMX extension hidden from guest.\n");
+	}
+#endif
 
 #ifndef VMM_GUEST
     extern char end[];
