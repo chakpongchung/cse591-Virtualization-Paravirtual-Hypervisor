@@ -27,6 +27,11 @@ int test_ept_map(void);
 #define VMX_EPT_FAULT_WRITE	0x02
 #define VMX_EPT_FAULT_INS	0x04
 
+#define EPT_READ	0x01
+#define EPT_WRITE	0x02
+#define EPT_EXEC	0x04
+
+#define EPT_FULL EPT_READ | EPT_WRITE | EPT_EXEC
 
 #define EPTE_ADDR	(~(PGSIZE - 1))
 #define EPTE_FLAGS	(PGSIZE - 1)

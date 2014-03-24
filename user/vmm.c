@@ -18,6 +18,40 @@ static int
 map_in_guest( envid_t guest, uintptr_t gpa, size_t memsz, 
         int fd, size_t filesz, off_t fileoffset ) {
     /* Your code here */
+    int i, r;
+    void *blk;
+
+    //cprintf("map_segment %x+%x\n", va, memsz);
+
+    if ((i = PGOFF(gpa))) {
+        gpa -= i;
+        memsz += i;
+        filesz += i;
+        fileoffset -= i;
+    }
+
+    for (i = 0; i < memsz; i += PGSIZE) {
+        if (i >= filesz) {
+            // allocate a blank page
+            if ((r = sys_page_alloc(guest, (void*) (gpa + i), PTE_P)) < 0)
+                  return r;
+        } else {
+            // from file
+            if ((r = sys_page_alloc(0, UTEMP, PTE_P|PTE_U|PTE_W)) < 0)
+                return r;
+            if ((r = seek(fd, fileoffset + i)) < 0)
+                return r;
+            if ((r = readn(fd, UTEMP, MIN(PGSIZE, filesz-i))) < 0)
+                return r;
+            if ((r = sys_ept_map(thisenv->env_id, UTEMP, guest, (void *)(gpa + i), __EPTE_FULL)) < 0)
+                panic("spawn: sys_ept_map data: %e", r);
+            sys_page_unmap(0, UTEMP);
+        }
+    }
+    return 0;
+
+
+
     return -E_NO_SYS;
 
 } 
@@ -32,60 +66,60 @@ static int
 copy_guest_kern_gpa( envid_t guest, char* fname ) {
 
     /* Your code here */
-	struct Elf elf_struct;
-        struct Elf *elf = &elf_struct;
-        int fd = open(fname, O_RDONLY);
-        uint64_t gpa = KERNEL_START;
-        readn(fd, elf, sizeof(struct Elf));
-	if (elf->e_magic != ELF_MAGIC)
-		panic("Format of the binary is not correct\n");
-        struct Proghdr ph_struct;
-	struct Proghdr *ph, *eph;
-	struct Page *p = NULL;
-        
-        ph = malloc(sizeof(struct Proghddr)*elf->e_phnum);
-        readn(fd, ph, sizeof(struct Proghddr)*elf->e_phnum);
-	ph = (struct Proghdr *) ((uint8_t *) elf + elf->e_phoff);
-	eph = ph + elf->e_phnum;
+	unsigned char elf_buf[512];
+	//struct Trapframe child_tf;
+	//envid_t child;
 
-	for (; ph < eph; ph++) {
-		if (ph->p_type == ELF_PROG_LOAD) {
-			uint64_t va = ph->p_va;
-			uint64_t size = ph->p_memsz;
-			uint64_t offset = ph->p_offset;
-			uint64_t i = 0;
-			if (ph->p_filesz > ph->p_memsz)
-				panic("Wrong size in elf binary\n");
-			map_in_guest(guest, gpa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset);
-                        
-                        gpa = gpa + ph->p_memsz;
-                        
-                        seek(fd, 0);
+	int fd, i, r;
+	struct Elf *elf;
+	struct Proghdr *ph;
+	int perm;
+	if ((r = open(fname, O_RDONLY)) < 0)
+		return r;
+	fd = r;
 
-
-			// Switch to env's address space so that we can use memcpy
-			lcr3(e->env_cr3);
-			memcpy((char*)ph->p_va, binary + ph->p_offset, ph->p_filesz);
-
-			if (ph->p_filesz < ph->p_memsz)
-				memset((char*)ph->p_va + ph->p_filesz, 0, ph->p_memsz - ph->p_filesz);
-
-			// Switch back to kernel's address space
-			lcr3(boot_cr3);
-		}
+	// Read elf header
+	elf = (struct Elf*) elf_buf;
+	if (readn(fd, elf_buf, sizeof(elf_buf)) != sizeof(elf_buf)  || elf->e_magic != ELF_MAGIC) 
+        {
+		close(fd);
+		cprintf("elf magic %08x want %08x\n", elf->e_magic, ELF_MAGIC);
+		return -E_NOT_EXEC;
 	}
 
-    // Now map one page for the program's initial stack
-    // at virtual address USTACKTOP - PGSIZE.
-	region_alloc(e, (void*)(USTACKTOP-PGSIZE), PGSIZE);
+	// Create new child environment
+	/*if ((r = sys_exofork()) < 0)
+		return r;
+	child = r;
+        */
 
-	// Magic to start executing environment at its address.
-	e->env_tf.tf_rip = elf->e_entry;
+	// Set up trap frame, including initial stack.
+	//child_tf = envs[ENVX(child)].env_tf;
+	//child_tf.tf_rip = elf->e_entry;
 
-    // LAB 3: Your code here.
-   	e->elf = binary;
+	//if ((r = init_stack(child, argv, &child_tf.tf_rsp)) < 0)
+	//	return r;
 
-    return -E_NO_SYS;
+	// Set up program segments as defined in ELF header.
+	ph = (struct Proghdr*) (elf_buf + elf->e_phoff);
+	for (i = 0; i < elf->e_phnum; i++, ph++) {
+		if (ph->p_type != ELF_PROG_LOAD)
+			continue;
+		perm = PTE_P | PTE_U;
+		if (ph->p_flags & ELF_PROG_FLAG_WRITE)
+			perm |= PTE_W;
+		if ((r = map_in_guest(guest, ph->p_va, ph->p_memsz, fd, ph->p_filesz, ph->p_offset)) < 0)
+		//if ((r = map_segment(child, ph->p_va, ph->p_memsz,
+		//		     fd, ph->p_filesz, ph->p_offset, perm)) < 0)
+			goto error;
+	}
+	close(fd);
+	fd = -1;
+        
+error:
+    close(fd);
+    return r;
+        
 }
 
 void
