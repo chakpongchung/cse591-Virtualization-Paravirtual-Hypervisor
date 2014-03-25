@@ -33,8 +33,10 @@ map_in_guest( envid_t guest, uintptr_t gpa, size_t memsz,
     for (i = 0; i < memsz; i += PGSIZE) {
         if (i >= filesz) {
             // allocate a blank page
-            if ((r = sys_page_alloc(0, (void*) (gpa + i), PTE_P)) < 0)
+            if ((r = sys_page_alloc(0, UTEMP, PTE_P|PTE_U|PTE_W)) < 0)                                                                                              
                   return r;
+        //    printf("thisenv->env_id =%x, UTEMP = %x, guest = %x , (void *)(gpa + i)= %x \n", 
+          //          thisenv->env_id, UTEMP, guest, (void *)(gpa + i) );
             if ((r = sys_ept_map(thisenv->env_id, UTEMP, guest, (void *)(gpa + i), __EPTE_FULL)) < 0)                                                               
                   panic("spawn: sys_ept_map data: %e", r);
             sys_page_unmap(0, UTEMP);
@@ -47,6 +49,8 @@ map_in_guest( envid_t guest, uintptr_t gpa, size_t memsz,
                 return r;
             if ((r = readn(fd, UTEMP, MIN(PGSIZE, filesz-i))) < 0)
                 return r;
+          //  printf("thisenv->env_id =%x, UTEMP = %x, guest = %x , (void *)(gpa + i)= %x \n", 
+            //         thisenv->env_id, UTEMP, guest, (void *)(gpa + i) );    
             if ((r = sys_ept_map(thisenv->env_id, UTEMP, guest, (void *)(gpa + i), __EPTE_FULL)) < 0)
                 panic("spawn: sys_ept_map data: %e", r);
             sys_page_unmap(0, UTEMP);
@@ -112,6 +116,8 @@ copy_guest_kern_gpa( envid_t guest, char* fname ) {
 		perm = PTE_P | PTE_U;
 		if (ph->p_flags & ELF_PROG_FLAG_WRITE)
 			perm |= PTE_W;
+                printf("guest = %x, ph->p_pa = %x, ph->p_memsz= %x, fd = %d, ph->p_filesz = %x, ph->p_offset = %x\n", 
+                                guest, ph->p_pa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset);
 		if ((r = map_in_guest(guest, ph->p_pa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset)) < 0)
 		//if ((r = map_segment(child, ph->p_va, ph->p_memsz,
 		//		     fd, ph->p_filesz, ph->p_offset, perm)) < 0)
