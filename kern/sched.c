@@ -61,17 +61,28 @@ sched_yield(void)
                     envs[i].env_type != ENV_TYPE_PP_DEDUP &&
 		    #endif
 		    envs[i].env_status == ENV_RUNNING)) // Choose only if current is in running state
+                {
+                    if (envs[i].env_type == ENV_TYPE_GUEST)// && envs[i].env_status == ENV_RUNNABLE)                                                                            
+                    {
+                        cprintf("Found and Env Guest");
+                        if ( !vmxon())
+                            vmx_vmrun(&envs[i]);
+                    }
+                    else
+                    {
 			env_run(&envs[i]);
+                    }
+                }
 	}
 
-    for (i = 0; i < NENV; i++) {
-        if (envs[i].env_type == ENV_TYPE_GUEST)// && envs[i].env_status == ENV_RUNNABLE)
-        {
-            cprintf("Found and Env Guest");
-            if ( !vmxon())
-                env_run(&envs[i]);
-        }
-    }
+//    for (i = 0; i < NENV; i++) {
+//        if (envs[i].env_type == ENV_TYPE_GUEST)// && envs[i].env_status == ENV_RUNNABLE)
+//        {
+//            cprintf("Found and Env Guest");
+//            if ( !vmxon())
+//                env_run(&envs[i]);
+//        }
+//    }
     // For debugging and testing purposes, if there are no
     // runnable environments other than the idle environments,
     // drop into the kernel monitor.

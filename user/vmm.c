@@ -33,8 +33,12 @@ map_in_guest( envid_t guest, uintptr_t gpa, size_t memsz,
     for (i = 0; i < memsz; i += PGSIZE) {
         if (i >= filesz) {
             // allocate a blank page
-            if ((r = sys_page_alloc(guest, (void*) (gpa + i), PTE_P)) < 0)
+            if ((r = sys_page_alloc(0, (void*) (gpa + i), PTE_P)) < 0)
                   return r;
+            if ((r = sys_ept_map(thisenv->env_id, UTEMP, guest, (void *)(gpa + i), __EPTE_FULL)) < 0)                                                               
+                  panic("spawn: sys_ept_map data: %e", r);
+            sys_page_unmap(0, UTEMP);
+
         } else {
             // from file
             if ((r = sys_page_alloc(0, UTEMP, PTE_P|PTE_U|PTE_W)) < 0)
@@ -108,7 +112,7 @@ copy_guest_kern_gpa( envid_t guest, char* fname ) {
 		perm = PTE_P | PTE_U;
 		if (ph->p_flags & ELF_PROG_FLAG_WRITE)
 			perm |= PTE_W;
-		if ((r = map_in_guest(guest, ph->p_va, ph->p_memsz, fd, ph->p_filesz, ph->p_offset)) < 0)
+		if ((r = map_in_guest(guest, ph->p_pa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset)) < 0)
 		//if ((r = map_segment(child, ph->p_va, ph->p_memsz,
 		//		     fd, ph->p_filesz, ph->p_offset, perm)) < 0)
 			goto error;

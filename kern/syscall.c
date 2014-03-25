@@ -508,22 +508,20 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 	    envid_t guest, void* guest_pa, int perm)
 {
     /* Your code here */
-    struct Env *env;
+    struct Env *env, *src_env;
     int ret = 0;
 
     if( (uint64_t)srcva >= UTOP)
         return -E_INVAL;
-    ret = envid2env(guest, &env, 1);
-    if(!ret)
-    {
-        if ((uint64_t)guest_pa + PGSIZE > env->env_vmxinfo.phys_sz)
-            return -E_INVAL;
-        ret = ept_map_hva2gpa(env->env_pml4e, srcva, guest_pa, perm, 1);
-        return ret;
-    }
-    else
+
+    if(  envid2env(guest, &env, 1) || envid2env(srcenvid, &src_env, 1) )
         return -E_BAD_ENV;
-    return 0;
+
+    if ((uint64_t)guest_pa + PGSIZE > env->env_vmxinfo.phys_sz)
+        return -E_INVAL;
+
+    ret = ept_map_hva2gpa(env->env_pml4e, srcva, guest_pa, perm, 1);
+    return ret;
 }
 
 static envid_t
