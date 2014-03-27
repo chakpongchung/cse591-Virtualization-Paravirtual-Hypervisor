@@ -511,8 +511,18 @@ sys_ept_map(envid_t srcenvid, void *srcva,
     struct Env *env, *src_env;
     int ret = 0;
 
-    if( (uint64_t)srcva >= UTOP)
+    if ((uint64_t)srcva >= UTOP || (srcva != ROUNDUP(srcva, PGSIZE) && srcva != ROUNDDOWN(srcva, PGSIZE)) ||
+	(uint64_t)guest_pa >= UTOP || (guest_pa != ROUNDUP(guest_pa, PGSIZE) && guest_pa != ROUNDDOWN(guest_pa, PGSIZE)))
+                return -E_INVAL;
+
+/*    if( (uint64_t)srcva >= UTOP)
         return -E_INVAL;
+*/
+/*    if (!(perm & PTE_U) || !(perm & PTE_P))
+                return -E_INVAL;
+*/
+    if((perm <= 0) || (perm > 7) || ((perm & __EPTE_WRITE) & (srcva && PTE_W)))
+                return -E_INVAL;
 
     if(  envid2env(guest, &env, 1) || envid2env(srcenvid, &src_env, 1) )
         return -E_BAD_ENV;
