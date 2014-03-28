@@ -430,6 +430,9 @@ void asm_vmrun(struct Trapframe *tf) {
             "push %%rcx \n\t"
 	    /* Set the VMCS rsp to the current top of the frame. */
             /* Your code here */
+            "cmp %c[host_rsp](%0), %%rsp \n\t"
+            "je 1f \n\t"
+            "mov %%rsp, %c[host_rsp](%0) \n\t"
             "1: \n\t"
             /* Reload cr2 if changed */
             "mov %c[cr2](%0), %%rax \n\t"
@@ -448,10 +451,31 @@ void asm_vmrun(struct Trapframe *tf) {
 	     *       to simplify the pointer arithmetic.
 	     */
 	    /* Your code here */
+            "cmpl $0, %c[launched](%0)  \n\t"
+
+
             /* Load guest general purpose registers from the trap frame.  Don't clobber flags. 
 	     *
 	     */
 	    /* Your code here */
+            "mov %c[rax](%0) , %%rax \n\t"
+            "mov %c[rbx](%0) , %%rbx \n\t"
+            "mov %c[rcx](%0) , %%rcx \n\t"
+            "mov %c[rdx](%0) , %%rdx \n\t"
+            "mov %c[rsi](%0) , %%rsi \n\t"
+            "mov %c[rdi](%0) , %%rdi \n\t"
+            "mov %c[rbp](%0) , %%rbp \n\t"
+            
+            "mov %c[r8](%0)  , %%r8  \n\t"
+            "mov %c[r9](%0)  , %%r9  \n\t"
+            "mov %c[r10](%0) , %%r10 \n\t"
+            "mov %c[r11](%0) , %%r11 \n\t"
+            "mov %c[r12](%0) , %%r12 \n\t"
+            "mov %c[r13](%0) , %%r13 \n\t"
+            "mov %c[r14](%0) , %%r14 \n\t"
+            "mov %c[r15](%0) , %%r15 \n\t"
+            
+            
             /* Enter guest mode */
 	    /* Your code here:
 	     * 
@@ -463,8 +487,10 @@ void asm_vmrun(struct Trapframe *tf) {
 	     * that you don't do any compareison that would clobber the condition code, set
 	     * above.
 	     */
+            /*"jne 1f \n\t"
+            "jmp 2f \n\t"
+            */
             ".Lvmx_return: "
-
 	    /* POST VM EXIT... */
             "mov %0, %c[wordsize](%%rsp) \n\t"
             "pop %0 \n\t"
@@ -473,12 +499,33 @@ void asm_vmrun(struct Trapframe *tf) {
 	     * Be careful that the number of pushes (above) and pops are symmetrical.
 	     */
 	    /* Your code here */
+            "mov %%rax , %c[rax](%0) \n\t"
+            "mov %%rbx , %c[rbx](%0) \n\t"
+            "mov %%rcx , %c[rcx](%0) \n\t"
+            "mov %%rdx , %c[rdx](%0) \n\t"
+            "mov %%rsi , %c[rsi](%0) \n\t"
+            "mov %%rdi , %c[rdi](%0) \n\t"
+            "mov %%rbp , %c[rbp](%0) \n\t"
+            
+            "mov %%r8  , %c[r8](%0)  \n\t"
+            "mov %%r9  , %c[r9](%0)  \n\t"
+            "mov %%r10 , %c[r10](%0) \n\t"
+            "mov %%r11 , %c[r11](%0) \n\t"
+            "mov %%r12 , %c[r12](%0) \n\t"
+            "mov %%r13 , %c[r13](%0) \n\t"
+            "mov %%r14 , %c[r14](%0) \n\t"
+            "mov %%r15 , %c[r15](%0) \n\t"
+
+            "mov %%cr2 , %%rax       \n\t"
+            "mov %%rax , %c[cr2](%0) \n\t"
+            
             "pop  %%rbp; pop  %%rdx \n\t"
 
             "setbe %c[fail](%0) \n\t"
             : : "c"(tf), "d"((unsigned long)VMCS_HOST_RSP), 
             [launched]"i"(offsetof(struct Trapframe, tf_ds)),
             [fail]"i"(offsetof(struct Trapframe, tf_es)),
+            [host_rsp]"i"(offsetof(struct Trapframe, tf_rsp)),
             [rax]"i"(offsetof(struct Trapframe, tf_regs.reg_rax)),
             [rbx]"i"(offsetof(struct Trapframe, tf_regs.reg_rbx)),
             [rcx]"i"(offsetof(struct Trapframe, tf_regs.reg_rcx)),
