@@ -429,18 +429,22 @@ void asm_vmrun(struct Trapframe *tf) {
             "push %%rcx \n\t" /* placeholder for guest rcx */
             "push %%rcx \n\t"
 	    /* Set the VMCS rsp to the current top of the frame. */
+            
             /* Your code here */
-            "cmp %c[host_rsp](%0), %%rsp \n\t"
-            "je 1f \n\t"
+            "cmp %%rsp , %c[host_rsp](%0) \n\t"
+            "je l1 \n\t"
             "mov %%rsp, %c[host_rsp](%0) \n\t"
-            "1: \n\t"
+            "" ASM_VMX_VMWRITE_RSP_RDX "\n\t"
+            "l1: \n\t"
+            
             /* Reload cr2 if changed */
             "mov %c[cr2](%0), %%rax \n\t"
             "mov %%cr2, %%rdx \n\t"
             "cmp %%rax, %%rdx \n\t"
-            "je 2f \n\t"
+            "je l2 \n\t"
             "mov %%rax, %%cr2 \n\t"
-            "2: \n\t"
+            "l2: \n\t"
+            
             /* Check if vmlaunch of vmresume is needed, set the condition code
 	     * appropriately for use below.  
 	     * 
@@ -450,9 +454,9 @@ void asm_vmrun(struct Trapframe *tf) {
 	     *       you can use register offset addressing mode, such as '%c[rax](%0)' 
 	     *       to simplify the pointer arithmetic.
 	     */
-	    /* Your code here */
+	    
+            /* Your code here */
             "cmpl $0, %c[launched](%0)  \n\t"
-
 
             /* Load guest general purpose registers from the trap frame.  Don't clobber flags. 
 	     *
@@ -460,7 +464,6 @@ void asm_vmrun(struct Trapframe *tf) {
 	    /* Your code here */
             "mov %c[rax](%0) , %%rax \n\t"
             "mov %c[rbx](%0) , %%rbx \n\t"
-            "mov %c[rcx](%0) , %%rcx \n\t"
             "mov %c[rdx](%0) , %%rdx \n\t"
             "mov %c[rsi](%0) , %%rsi \n\t"
             "mov %c[rdi](%0) , %%rdi \n\t"
@@ -475,6 +478,8 @@ void asm_vmrun(struct Trapframe *tf) {
             "mov %c[r14](%0) , %%r14 \n\t"
             "mov %c[r15](%0) , %%r15 \n\t"
             
+            "mov %c[rcx](%0) , %%rcx \n\t"
+
             
             /* Enter guest mode */
 	    /* Your code here:
@@ -487,9 +492,12 @@ void asm_vmrun(struct Trapframe *tf) {
 	     * that you don't do any compareison that would clobber the condition code, set
 	     * above.
 	     */
-            /*"jne 1f \n\t"
-            "jmp 2f \n\t"
-            */
+            "jne l3 \n\t"
+            "" ASM_VMX_VMLAUNCH "\n\t"
+            "jmp l4 \n\t"
+            "l3: " ASM_VMX_VMRESUME "\n\t"
+            "l4: \n\t"
+
             ".Lvmx_return: "
 	    /* POST VM EXIT... */
             "mov %0, %c[wordsize](%%rsp) \n\t"
@@ -501,7 +509,7 @@ void asm_vmrun(struct Trapframe *tf) {
 	    /* Your code here */
             "mov %%rax , %c[rax](%0) \n\t"
             "mov %%rbx , %c[rbx](%0) \n\t"
-            "mov %%rcx , %c[rcx](%0) \n\t"
+            "pop %c[rcx](%0) \n\t"
             "mov %%rdx , %c[rdx](%0) \n\t"
             "mov %%rsi , %c[rsi](%0) \n\t"
             "mov %%rdi , %c[rdi](%0) \n\t"
@@ -521,7 +529,38 @@ void asm_vmrun(struct Trapframe *tf) {
             
             "pop  %%rbp; pop  %%rdx \n\t"
 
+            
+            : : "c"(tf), "d"((unsigned long)VMCS_HOST_RSP), 
+            [launched]"i"(offsetof(struct Trapframe, tf_ds)),
+            [fail]"i"(offsetof(struct Trapframe, tf_es)),
+            [host_rsp]"i"(offsetof(struct Trapframe, tf_rsp)),
+            [rax]"i"(offsetof(struct Trapframe, tf_regs.reg_rax)),
+            [rbx]"i"(offsetof(struct Trapframe, tf_regs.reg_rbx)),
+            [rcx]"i"(offsetof(struct Trapframe, tf_regs.reg_rcx)),
+            [rdx]"i"(offsetof(struct Trapframe, tf_regs.reg_rdx)),
+            [rsi]"i"(offsetof(struct Trapframe, tf_regs.reg_rsi)),
+            [rdi]"i"(offsetof(struct Trapframe, tf_regs.reg_rdi)),
+            [rbp]"i"(offsetof(struct Trapframe, tf_regs.reg_rbp)),
+            [r8]"i"(offsetof(struct Trapframe, tf_regs.reg_r8)),
+            [r9]"i"(offsetof(struct Trapframe, tf_regs.reg_r9)),
+            [r10]"i"(offsetof(struct Trapframe, tf_regs.reg_r10)),
+            [r11]"i"(offsetof(struct Trapframe, tf_regs.reg_r11)),
+            [r12]"i"(offsetof(struct Trapframe, tf_regs.reg_r12)),
+            [r13]"i"(offsetof(struct Trapframe, tf_regs.reg_r13)),
+            [r14]"i"(offsetof(struct Trapframe, tf_regs.reg_r14)),
+            [r15]"i"(offsetof(struct Trapframe, tf_regs.reg_r15)),
+            [cr2]"i"(offsetof(struct Trapframe, tf_err)),
+            [wordsize]"i"(sizeof(uint64_t))
+                : "cc", "memory"
+                    , "rax", "rbx", "rdi", "rsi"
+                        , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
+    );
+    
+    cprintf("\n ------------------------Test Checkpoint ----------------------\n");
+
+    asm(
             "setbe %c[fail](%0) \n\t"
+            
             : : "c"(tf), "d"((unsigned long)VMCS_HOST_RSP), 
             [launched]"i"(offsetof(struct Trapframe, tf_ds)),
             [fail]"i"(offsetof(struct Trapframe, tf_es)),
@@ -637,7 +676,7 @@ int vmx_vmrun( struct Env *e ) {
 
     vmcs_write64( VMCS_GUEST_RSP, curenv->env_tf.tf_rsp  );
     vmcs_write64( VMCS_GUEST_RIP, curenv->env_tf.tf_rip );
-    panic ("asm vmrun incomplete\n");
+    //panic ("asm vmrun incomplete\n");
     asm_vmrun( &e->env_tf );
     return 0;
 }

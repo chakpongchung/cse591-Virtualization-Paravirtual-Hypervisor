@@ -116,8 +116,8 @@ copy_guest_kern_gpa( envid_t guest, char* fname ) {
 		perm = PTE_P | PTE_U;
 		if (ph->p_flags & ELF_PROG_FLAG_WRITE)
 			perm |= PTE_W;
-                printf("guest = %x, ph->p_pa = %x, ph->p_memsz= %x, fd = %d, ph->p_filesz = %x, ph->p_offset = %x\n", 
-                                guest, ph->p_pa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset);
+                //printf("guest = %x, ph->p_pa = %x, ph->p_memsz= %x, fd = %d, ph->p_filesz = %x, ph->p_offset = %x\n", 
+                //                guest, ph->p_pa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset);
 		if ((r = map_in_guest(guest, ph->p_pa, ph->p_memsz, fd, ph->p_filesz, ph->p_offset)) < 0)
 		//if ((r = map_segment(child, ph->p_va, ph->p_memsz,
 		//		     fd, ph->p_filesz, ph->p_offset, perm)) < 0)

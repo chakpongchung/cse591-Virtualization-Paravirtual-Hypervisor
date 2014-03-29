@@ -81,7 +81,7 @@ i386_init(void)
 
 	// Lab 4 multitasking initialization functions
 	pic_init();
-        test_ept_map();
+        //test_ept_map();
 	// Lab 6 hardware initialization functions
 	//time_init();
 	//pci_init();
