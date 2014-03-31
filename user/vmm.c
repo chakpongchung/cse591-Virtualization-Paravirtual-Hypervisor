@@ -161,7 +161,7 @@ umain(int argc, char **argv) {
 	cprintf("Error mapping bootloader into the guest - %d\n.", ret);
 	exit();
     }
-
+    cprintf("Completed user/vmm\n");
     // Mark the guest as runnable.
     sys_env_set_status(guest, ENV_RUNNABLE);
     wait(guest);

@@ -238,7 +238,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
     pte_t *pte = NULL;
     int ret = 0;
 
-    page_lookup(curenv->env_pml4e, hva, &pte);
+    struct Page* p = page_lookup(curenv->env_pml4e, hva, &pte);
 
     if(pte == NULL)
         return -E_INVAL;
@@ -257,6 +257,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
             if(overwrite)
             {
                 *pte = (pte_t)hpa | perm;
+                p->pp_ref++;
                 return 0;
             }
             else
@@ -265,6 +266,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
         else
         {
                 *pte = (pte_t)hpa | perm;
+                p->pp_ref++;
                 return 0;
         }
     }

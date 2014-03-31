@@ -373,13 +373,14 @@ void vmcs_dump_cpu() {
 }
 
 void vmexit() {
-    int exit_reason = -1;
+    uint64_t exit_reason = -1;
     bool exit_handled = false;
     // Get the reason for VMEXIT from the VMCS.
     // Your code here.
-
+    exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
+    
     /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
-    /* vmcs_dump_cpu(); */
+    //vmcs_dump_cpu();
  
     switch(exit_reason & EXIT_REASON_MASK) {
         case EXIT_REASON_RDMSR:
@@ -406,6 +407,9 @@ void vmexit() {
             env_destroy(curenv);
             exit_handled = true;
             break;
+        case EXIT_REASON_TRIPLE_FAULT:
+            cprintf("\n tRIPLE Fault ");
+            break;
     }
 
     if(!exit_handled) {
@@ -419,10 +423,11 @@ void vmexit() {
 
 void asm_vmrun(struct Trapframe *tf) {
 
-    /* cprintf("VMRUN\n"); */
+    cprintf("VMRUN\n");
     // NOTE: Since we re-use Trapframe structure, tf.tf_err contains the value
     // of cr2 of the guest.
     tf->tf_ds = curenv->env_runs;
+    cprintf("env_runs = %d type = %d, env_id = %d\n", tf->tf_ds, curenv->env_type, curenv->env_id);
     tf->tf_es = 0;
     asm(
             "push %%rdx; push %%rbp;"
@@ -431,11 +436,9 @@ void asm_vmrun(struct Trapframe *tf) {
 	    /* Set the VMCS rsp to the current top of the frame. */
             
             /* Your code here */
-            "cmp %%rsp , %c[host_rsp](%0) \n\t"
-            "je l1 \n\t"
-            "mov %%rsp, %c[host_rsp](%0) \n\t"
-            "" ASM_VMX_VMWRITE_RSP_RDX "\n\t"
-            "l1: \n\t"
+            "mov %%rsp, %%rax \n\t"
+//            "mov $0x0000681C, %%rdx \n\t"
+            "vmwrite %%rax, %%rdx \n\t"
             
             /* Reload cr2 if changed */
             "mov %c[cr2](%0), %%rax \n\t"
@@ -454,9 +457,9 @@ void asm_vmrun(struct Trapframe *tf) {
 	     *       you can use register offset addressing mode, such as '%c[rax](%0)' 
 	     *       to simplify the pointer arithmetic.
 	     */
-	    
             /* Your code here */
-            "cmpl $0, %c[launched](%0)  \n\t"
+            "cmpl $1, %c[launched](%0)  \n\t"
+	    
 
             /* Load guest general purpose registers from the trap frame.  Don't clobber flags. 
 	     *
@@ -479,7 +482,6 @@ void asm_vmrun(struct Trapframe *tf) {
             "mov %c[r15](%0) , %%r15 \n\t"
             
             "mov %c[rcx](%0) , %%rcx \n\t"
-
             
             /* Enter guest mode */
 	    /* Your code here:
@@ -502,14 +504,17 @@ void asm_vmrun(struct Trapframe *tf) {
 	    /* POST VM EXIT... */
             "mov %0, %c[wordsize](%%rsp) \n\t"
             "pop %0 \n\t"
+
             /* Save general purpose guest registers and cr2 back to the trapframe.
 	     *
 	     * Be careful that the number of pushes (above) and pops are symmetrical.
 	     */
 	    /* Your code here */
+            
             "mov %%rax , %c[rax](%0) \n\t"
             "mov %%rbx , %c[rbx](%0) \n\t"
-            "pop %c[rcx](%0) \n\t"
+            "mov %%rcx , %c[rcx](%0) \n\t"
+            //"pop %c[rcx](%0) \n\t"
             "mov %%rdx , %c[rdx](%0) \n\t"
             "mov %%rsi , %c[rsi](%0) \n\t"
             "mov %%rdi , %c[rdi](%0) \n\t"
@@ -527,13 +532,14 @@ void asm_vmrun(struct Trapframe *tf) {
             "mov %%cr2 , %%rax       \n\t"
             "mov %%rax , %c[cr2](%0) \n\t"
             
+            
+            
             "pop  %%rbp; pop  %%rdx \n\t"
-
+            "setbe %c[fail](%0) \n\t"
             
             : : "c"(tf), "d"((unsigned long)VMCS_HOST_RSP), 
             [launched]"i"(offsetof(struct Trapframe, tf_ds)),
             [fail]"i"(offsetof(struct Trapframe, tf_es)),
-            [host_rsp]"i"(offsetof(struct Trapframe, tf_rsp)),
             [rax]"i"(offsetof(struct Trapframe, tf_regs.reg_rax)),
             [rbx]"i"(offsetof(struct Trapframe, tf_regs.reg_rbx)),
             [rcx]"i"(offsetof(struct Trapframe, tf_regs.reg_rcx)),
@@ -558,34 +564,6 @@ void asm_vmrun(struct Trapframe *tf) {
     
     cprintf("\n ------------------------Test Checkpoint ----------------------\n");
 
-    asm(
-            "setbe %c[fail](%0) \n\t"
-            
-            : : "c"(tf), "d"((unsigned long)VMCS_HOST_RSP), 
-            [launched]"i"(offsetof(struct Trapframe, tf_ds)),
-            [fail]"i"(offsetof(struct Trapframe, tf_es)),
-            [host_rsp]"i"(offsetof(struct Trapframe, tf_rsp)),
-            [rax]"i"(offsetof(struct Trapframe, tf_regs.reg_rax)),
-            [rbx]"i"(offsetof(struct Trapframe, tf_regs.reg_rbx)),
-            [rcx]"i"(offsetof(struct Trapframe, tf_regs.reg_rcx)),
-            [rdx]"i"(offsetof(struct Trapframe, tf_regs.reg_rdx)),
-            [rsi]"i"(offsetof(struct Trapframe, tf_regs.reg_rsi)),
-            [rdi]"i"(offsetof(struct Trapframe, tf_regs.reg_rdi)),
-            [rbp]"i"(offsetof(struct Trapframe, tf_regs.reg_rbp)),
-            [r8]"i"(offsetof(struct Trapframe, tf_regs.reg_r8)),
-            [r9]"i"(offsetof(struct Trapframe, tf_regs.reg_r9)),
-            [r10]"i"(offsetof(struct Trapframe, tf_regs.reg_r10)),
-            [r11]"i"(offsetof(struct Trapframe, tf_regs.reg_r11)),
-            [r12]"i"(offsetof(struct Trapframe, tf_regs.reg_r12)),
-            [r13]"i"(offsetof(struct Trapframe, tf_regs.reg_r13)),
-            [r14]"i"(offsetof(struct Trapframe, tf_regs.reg_r14)),
-            [r15]"i"(offsetof(struct Trapframe, tf_regs.reg_r15)),
-            [cr2]"i"(offsetof(struct Trapframe, tf_err)),
-            [wordsize]"i"(sizeof(uint64_t))
-                : "cc", "memory"
-                    , "rax", "rbx", "rdi", "rsi"
-                        , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
-    );
 
     if(tf->tf_es) {
         cprintf("Error during VMLAUNCH/VMRESUME\n");
@@ -637,11 +615,12 @@ bitmap_setup(struct VmxGuestInfo *ginfo) {
  */
 int vmx_vmrun( struct Env *e ) {
 
+    
     if ( e->env_type != ENV_TYPE_GUEST ) {
         return -E_INVAL;
     }
     uint8_t error;
-
+    
     if( e->env_runs == 1 ) {
         physaddr_t vmcs_phy_addr = PADDR(e->env_vmxinfo.vmcs);
 
@@ -673,7 +652,7 @@ int vmx_vmrun( struct Env *e ) {
             return -E_VMCS_INIT; 
         }
     }
-
+    //cprintf("Env type : %d , env_id = %d ", curenv->env_type, curenv->env_id);
     vmcs_write64( VMCS_GUEST_RSP, curenv->env_tf.tf_rsp  );
     vmcs_write64( VMCS_GUEST_RIP, curenv->env_tf.tf_rip );
     //panic ("asm vmrun incomplete\n");

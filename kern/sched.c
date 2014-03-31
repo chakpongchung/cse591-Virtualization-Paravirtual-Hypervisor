@@ -15,6 +15,7 @@ vmxon() {
             cprintf("Error executing VMXON: %e\n", r);
             return r;
         }
+        cprintf("Env type : %d , env_id = %d ", curenv->env_type, curenv->env_id);
         cprintf("VMXON\n");
     }
     return 0;
@@ -62,11 +63,17 @@ sched_yield(void)
 		    #endif
 		    envs[i].env_status == ENV_RUNNING)) // Choose only if current is in running state
                 {
-                    if (envs[i].env_type == ENV_TYPE_GUEST)// && envs[i].env_status == ENV_RUNNABLE)                                                                            
+                    if (envs[i].env_type == ENV_TYPE_GUEST && envs[i].env_status == ENV_RUNNABLE)                                                                            
                     {
                         cprintf("Found and Env Guest");
                         if ( !vmxon())
+                        {
+                            //cprintf("My VMXON to start guest ");
+                            //cprintf("Env type : %d , env_id = %d ", curenv->env_type, curenv->env_id);
+                            curenv = &envs[i];
+                            curenv->env_runs++;
                             vmx_vmrun(&envs[i]);
+                        }
                     }
                     else
                     {
