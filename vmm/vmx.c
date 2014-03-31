@@ -513,8 +513,8 @@ void asm_vmrun(struct Trapframe *tf) {
             
             "mov %%rax , %c[rax](%0) \n\t"
             "mov %%rbx , %c[rbx](%0) \n\t"
-            "mov %%rcx , %c[rcx](%0) \n\t"
-            //"pop %c[rcx](%0) \n\t"
+            //"mov %%rcx , %c[rcx](%0) \n\t"
+            "pop %c[rcx](%0) \n\t"
             "mov %%rdx , %c[rdx](%0) \n\t"
             "mov %%rsi , %c[rsi](%0) \n\t"
             "mov %%rdi , %c[rdi](%0) \n\t"
