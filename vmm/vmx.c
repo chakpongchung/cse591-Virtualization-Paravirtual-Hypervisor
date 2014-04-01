@@ -377,9 +377,10 @@ void vmexit() {
     bool exit_handled = false;
     // Get the reason for VMEXIT from the VMCS.
     // Your code here.
-    exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
+    //exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
+     cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     
-    /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
+     /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
     //vmcs_dump_cpu();
  
     switch(exit_reason & EXIT_REASON_MASK) {
@@ -407,9 +408,9 @@ void vmexit() {
             env_destroy(curenv);
             exit_handled = true;
             break;
-        case EXIT_REASON_TRIPLE_FAULT:
+/*        case EXIT_REASON_TRIPLE_FAULT:
             cprintf("\n tRIPLE Fault ");
-            break;
+            break;*/
     }
 
     if(!exit_handled) {
@@ -418,6 +419,7 @@ void vmexit() {
         env_destroy(curenv);
     }
     
+    //while(1);
     sched_yield();
 }
 
@@ -563,7 +565,6 @@ void asm_vmrun(struct Trapframe *tf) {
     );
     
     cprintf("\n ------------------------Test Checkpoint ----------------------\n");
-
 
     if(tf->tf_es) {
         cprintf("Error during VMLAUNCH/VMRESUME\n");

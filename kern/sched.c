@@ -46,8 +46,8 @@ sched_yield(void)
 
     // LAB 4: Your code here.
 
-
 	if (curenv) {
+    //            cprintf("Currenv : %d", curenv->env_id);
         	for (i = ENVX(curenv->env_id)+1; i != ENVX(curenv->env_id); i = (i+1)%NENV) {
                 	if (envs[i].env_type != ENV_TYPE_IDLE && 
 			     #ifdef RUN_POSTPROCESS_DEDUP_ON_IDLE
@@ -105,9 +105,11 @@ sched_yield(void)
         while (1)
             monitor(NULL);
     }
-
+    
+    cprintf("Currenv ");
     // Run this CPU's idle environment when nothing else is runnable.
     idle = &envs[cpunum()];
+    cprintf("Currenv 1 %d , %d, %d", idle->env_id, idle->env_status, idle->env_type);
     if (!(idle->env_status == ENV_RUNNABLE || idle->env_status == ENV_RUNNING))
         panic("CPU %d: No idle environment!", cpunum());
     env_run(idle);
