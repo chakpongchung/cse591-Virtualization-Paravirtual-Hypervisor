@@ -377,11 +377,12 @@ void vmexit() {
     bool exit_handled = false;
     // Get the reason for VMEXIT from the VMCS.
     // Your code here.
-    //exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
-     cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
+    exit_reason = vmcs_read32(VMCS_32BIT_VMEXIT_REASON);
+    cprintf( "---VMEXIT Reason: %d : %16x---\n", exit_reason, exit_reason & EXIT_REASON_MASK );
+    //cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     
      /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
-    //vmcs_dump_cpu();
+    vmcs_dump_cpu();
  
     switch(exit_reason & EXIT_REASON_MASK) {
         case EXIT_REASON_RDMSR:
@@ -416,6 +417,7 @@ void vmexit() {
     if(!exit_handled) {
         cprintf( "Unhandled VMEXIT, aborting guest.\n" );
         vmcs_dump_cpu();
+        //while(1);
         env_destroy(curenv);
     }
     
@@ -616,7 +618,8 @@ bitmap_setup(struct VmxGuestInfo *ginfo) {
  */
 int vmx_vmrun( struct Env *e ) {
 
-    
+   
+   cprintf("Here\n");
     if ( e->env_type != ENV_TYPE_GUEST ) {
         return -E_INVAL;
     }
