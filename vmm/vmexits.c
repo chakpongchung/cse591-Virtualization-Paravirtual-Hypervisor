@@ -160,8 +160,23 @@ bool
 handle_cpuid(struct Trapframe *tf, struct VmxGuestInfo *ginfo)
 {
     /* Your code here */
-    cprintf("Handle cpuid not implemented\n");
-    return false;
+    uint32_t eax, ebx, ecx, edx;
+    eax = (uint32_t) tf->tf_regs.reg_rax;
+    cpuid( 1, &eax, &ebx, &ecx, &edx );
+
+    tf->tf_regs.reg_rax = eax;
+    tf->tf_regs.reg_rbx = ebx;
+    tf->tf_regs.reg_rcx = ecx;
+    tf->tf_regs.reg_rdx = edx;
+
+    if( tf->tf_regs.reg_rax == 1 )
+        tf->tf_regs.reg_rcx = tf->tf_regs.reg_rcx & (~32);
+        
+    tf->tf_rip += vmcs_read32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH);
+    
+    //cprintf("Handle cpuid not implemented\n");
+
+    return true;
 
 }
 
@@ -200,6 +215,10 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // Copy the mbinfo and memory_map_t (segment descriptions) into the guest page, and return
 	    //   a pointer to this region in rbx (as a guest physical address).
 	    /* Your code here */
+
+
+
+
 	    cprintf("e820 map hypercall not implemented\n");	    
 	    handled = false;
 	    break;
