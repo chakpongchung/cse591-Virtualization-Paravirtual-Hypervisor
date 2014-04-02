@@ -12,7 +12,6 @@
 .globl gboot_start 
 gboot_start:
 .code16                     # Assemble for 16-bit mode
-jmp gboot_start
 cli                         # Disable interrupts
 cld                         # String operations increment
 

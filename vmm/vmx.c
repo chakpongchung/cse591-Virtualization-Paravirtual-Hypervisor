@@ -377,10 +377,14 @@ void vmexit() {
     bool exit_handled = false;
     // Get the reason for VMEXIT from the VMCS.
     // Your code here.
-    exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
+    //exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
+
+    exit_reason = vmcs_read32(VMCS_32BIT_VMEXIT_REASON);
+    cprintf( "---VMEXIT Reason: %d : %16x---\n", exit_reason, exit_reason & EXIT_REASON_MASK );
+    //cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     
-    /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
-    //vmcs_dump_cpu();
+     /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
+    vmcs_dump_cpu();
  
     switch(exit_reason & EXIT_REASON_MASK) {
         case EXIT_REASON_RDMSR:
@@ -399,26 +403,31 @@ void vmexit() {
             exit_handled = handle_cpuid(&curenv->env_tf, &curenv->env_vmxinfo);
             break;
         case EXIT_REASON_VMCALL:
-            exit_handled = handle_vmcall(&curenv->env_tf, &curenv->env_vmxinfo,
-                    curenv->env_pml4e);
+            curenv->env_tf.tf_rip+=3;
+            exit_handled = true; //handle_vmcall(&curenv->env_tf, &curenv->env_vmxinfo,
+                    //curenv->env_pml4e);
             break;
         case EXIT_REASON_HLT:
             cprintf("\nHLT in guest, exiting guest.\n");
             env_destroy(curenv);
             exit_handled = true;
             break;
-        case EXIT_REASON_TRIPLE_FAULT:
+/*        case EXIT_REASON_TRIPLE_FAULT:
             cprintf("\n tRIPLE Fault ");
-            break;
+            break;*/
     }
 
     if(!exit_handled) {
         cprintf( "Unhandled VMEXIT, aborting guest.\n" );
         vmcs_dump_cpu();
+        //while(1);
         env_destroy(curenv);
     }
     
-    sched_yield();
+    //while(1);
+
+    //sched_yield();
+    vmx_vmrun(curenv);
 }
 
 void asm_vmrun(struct Trapframe *tf) {
@@ -564,7 +573,6 @@ void asm_vmrun(struct Trapframe *tf) {
     
     cprintf("\n ------------------------Test Checkpoint ----------------------\n");
 
-
     if(tf->tf_es) {
         cprintf("Error during VMLAUNCH/VMRESUME\n");
     } else {
@@ -615,7 +623,8 @@ bitmap_setup(struct VmxGuestInfo *ginfo) {
  */
 int vmx_vmrun( struct Env *e ) {
 
-    
+   
+   cprintf("Here\n");
     if ( e->env_type != ENV_TYPE_GUEST ) {
         return -E_INVAL;
     }
