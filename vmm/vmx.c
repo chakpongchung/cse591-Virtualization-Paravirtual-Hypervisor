@@ -403,8 +403,9 @@ void vmexit() {
             exit_handled = handle_cpuid(&curenv->env_tf, &curenv->env_vmxinfo);
             break;
         case EXIT_REASON_VMCALL:
-            exit_handled = handle_vmcall(&curenv->env_tf, &curenv->env_vmxinfo,
-                    curenv->env_pml4e);
+            curenv->env_tf.tf_rip+=3;
+            exit_handled = true; //handle_vmcall(&curenv->env_tf, &curenv->env_vmxinfo,
+                    //curenv->env_pml4e);
             break;
         case EXIT_REASON_HLT:
             cprintf("\nHLT in guest, exiting guest.\n");
@@ -424,7 +425,9 @@ void vmexit() {
     }
     
     //while(1);
-    sched_yield();
+
+    //sched_yield();
+    vmx_vmrun(curenv);
 }
 
 void asm_vmrun(struct Trapframe *tf) {

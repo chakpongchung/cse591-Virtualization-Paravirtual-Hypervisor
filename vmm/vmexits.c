@@ -185,6 +185,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     envid_t to_env;
     uint32_t val;
     struct Page *page; 
+    uintptr_t *hva;
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
 
@@ -202,8 +203,12 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    /* Your code here */
 
             page = page_alloc(ALLOC_ZERO);
-             
-            page_insert(curenv->env_pml4e, page, UTEMP, PTE_W | PTE_U );
+          
+            page->pp_ref++;
+            //r = page_insert(curenv->env_pml4e, page, UTEMP, PTE_W | PTE_U );
+            //
+
+            hva = page2kva(page);
 
             memory_map_t mmap[3];
             
@@ -233,15 +238,16 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             mbinfo.mmap_length = sizeof(mmap);
             
 
-            memcpy((void *)UTEMP, &mbinfo, sizeof(multiboot_info_t));
-            memcpy((void *)(UTEMP + sizeof(mbinfo)),(void *) mmap, sizeof(memory_map_t));
+            memcpy(hva, &mbinfo, sizeof(multiboot_info_t));
+            memcpy((void*)((uint64_t)hva + sizeof(mbinfo)),(void *) mmap, sizeof(memory_map_t));
 
-            ept_map_hva2gpa(eptrt, UTEMP, (void *)multiboot_map_addr, __EPTE_FULL, 1);
+            ept_map_hva2gpa(eptrt, hva, (void *)multiboot_map_addr, __EPTE_FULL, 1);
 
             //asm("movq %%rax, %%rbx \n\t");
 
             //cprintf("e820 map hypercall not implemented\n");	    
 	    handled = true;
+            cprintf("vmcall handle complete");
 	    break;
 
         case VMX_VMCALL_IPCSEND:
