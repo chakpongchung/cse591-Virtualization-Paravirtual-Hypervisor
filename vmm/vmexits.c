@@ -12,7 +12,7 @@
 #include <inc/string.h>
 #include <kern/syscall.h>
 #include <kern/env.h>
-
+#include <inc/ept.h>
 
 bool
 find_msr_in_region(uint32_t msr_idx, uintptr_t *area, int area_sz, struct vmx_msr_entry **msr_entry) {
@@ -184,7 +184,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     void *gpa_pg, *hva_pg;
     envid_t to_env;
     uint32_t val;
-
+    struct Page *page; 
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
 
@@ -200,9 +200,50 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // Copy the mbinfo and memory_map_t (segment descriptions) into the guest page, and return
 	    //   a pointer to this region in rbx (as a guest physical address).
 	    /* Your code here */
-	    cprintf("e820 map hypercall not implemented\n");	    
-	    handled = false;
+
+            page = page_alloc(ALLOC_ZERO);
+             
+            page_insert(curenv->env_pml4e, page, UTEMP, PTE_W | PTE_U );
+
+            memory_map_t mmap[3];
+            
+            mmap[0].size = 20;
+            mmap[0].base_addr_low = 0x0;
+            mmap[0].base_addr_high = 0x0;
+            mmap[0].length_low = IOPHYSMEM;
+            mmap[0].length_high = 0x0;
+            mmap[0].type = MB_TYPE_USABLE;
+            
+            mmap[1].size = 20;
+            mmap[1].base_addr_low = IOPHYSMEM;
+            mmap[1].base_addr_high = 0x0;
+            mmap[1].length_low = 0x60000;
+            mmap[1].length_high = 0x0;
+            mmap[1].type = MB_TYPE_RESERVED;
+            
+            mmap[2].size = 20;
+            mmap[2].base_addr_low = EXTPHYSMEM;
+            mmap[2].base_addr_high = 0x0;
+            mmap[2].length_low = gInfo->phys_sz;
+            mmap[2].length_high = 0x0;
+            mmap[2].type = MB_TYPE_USABLE;
+
+            mbinfo.flags = MB_FLAG_MMAP;
+            mbinfo.mmap_addr = 0x6000 + sizeof(mbinfo);
+            mbinfo.mmap_length = sizeof(mmap);
+            
+
+            memcpy((void *)UTEMP, &mbinfo, sizeof(multiboot_info_t));
+            memcpy((void *)(UTEMP + sizeof(mbinfo)),(void *) mmap, sizeof(memory_map_t));
+
+            ept_map_hva2gpa(eptrt, UTEMP, (void *)multiboot_map_addr, __EPTE_FULL, 1);
+
+            //asm("movq %%rax, %%rbx \n\t");
+
+            //cprintf("e820 map hypercall not implemented\n");	    
+	    handled = true;
 	    break;
+
         case VMX_VMCALL_IPCSEND:
 	    // Issue the sys_ipc_send call to the host.
 	    // 
@@ -228,6 +269,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	     * Hint: The TA solution does not hard-code the length of the vmcall instruction.
 	     */
 	    /* Your code here */
+            tf->tf_rip+=3;
     }
     return handled;
 }
