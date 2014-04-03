@@ -161,16 +161,18 @@ handle_cpuid(struct Trapframe *tf, struct VmxGuestInfo *ginfo)
 {
     /* Your code here */
     uint32_t eax, ebx, ecx, edx;
-    eax = (uint32_t) tf->tf_regs.reg_rax;
-    cpuid( 1, &eax, &ebx, &ecx, &edx );
+    uint32_t junkeax = (uint32_t) tf->tf_regs.reg_rax;
 
-    tf->tf_regs.reg_rax = eax;
-    tf->tf_regs.reg_rbx = ebx;
-    tf->tf_regs.reg_rcx = ecx;
-    tf->tf_regs.reg_rdx = edx;
+    cpuid( junkeax, &eax, &ebx, &ecx, &edx );
+    
+    if(junkeax == 1)
+        ecx = ecx & (~(32));
 
-    if( tf->tf_regs.reg_rax == 1 )
-        tf->tf_regs.reg_rcx = tf->tf_regs.reg_rcx & (~32);
+    tf->tf_regs.reg_rax =(uint64_t) eax;
+    tf->tf_regs.reg_rbx =(uint64_t) ebx;
+    tf->tf_regs.reg_rcx =(uint64_t) ecx;
+    tf->tf_regs.reg_rdx =(uint64_t) edx;
+
         
     tf->tf_rip += vmcs_read32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH);
     
