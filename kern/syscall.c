@@ -509,6 +509,8 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 {
     /* Your code here */
     struct Env *env, *src_env;
+    struct Page* pp;
+    pte_t * srcva_pte;
     int ret = 0;
 
     if ((uint64_t)srcva >= UTOP || (srcva != ROUNDUP(srcva, PGSIZE) && srcva != ROUNDDOWN(srcva, PGSIZE)) ||
@@ -521,7 +523,7 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 /*    if (!(perm & PTE_U) || !(perm & PTE_P))
                 return -E_INVAL;
 */
-    if((perm <= 0) || (perm > 7) || ((perm & __EPTE_WRITE) & (srcva && PTE_W)))
+    if((perm <= 0) || (perm > 7))      // || ((perm & __EPTE_WRITE) & (srcva && PTE_W)))
                 return -E_INVAL;
 
     if(  envid2env(guest, &env, 1) || envid2env(srcenvid, &src_env, 1) )
@@ -529,6 +531,13 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 
     if ((uint64_t)guest_pa + PGSIZE > env->env_vmxinfo.phys_sz)
         return -E_INVAL;
+    
+    pp = page_lookup(src_env->env_pml4e, (void*) srcva, &srcva_pte);
+
+    if((perm & __EPTE_WRITE) && (!(*srcva_pte & PTE_W)))
+        return -E_INVAL;
+
+    srcva = page2kva(pp);
 
     ret = ept_map_hva2gpa(env->env_pml4e, srcva, guest_pa, perm, 1);
     return ret;
