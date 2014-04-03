@@ -384,14 +384,15 @@ void vmexit() {
     //cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     
      /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
-    vmcs_dump_cpu();
  
     switch(exit_reason & EXIT_REASON_MASK) {
         case EXIT_REASON_RDMSR:
             exit_handled = handle_rdmsr(&curenv->env_tf, &curenv->env_vmxinfo);
+            vmcs_dump_cpu();
             break;
         case EXIT_REASON_WRMSR:
             exit_handled = handle_wrmsr(&curenv->env_tf, &curenv->env_vmxinfo);
+            vmcs_dump_cpu();
             break;
         case EXIT_REASON_EPT_VIOLATION:
             exit_handled = handle_eptviolation(curenv->env_pml4e, &curenv->env_vmxinfo);
@@ -401,9 +402,11 @@ void vmexit() {
             break;
         case EXIT_REASON_CPUID:
             exit_handled = handle_cpuid(&curenv->env_tf, &curenv->env_vmxinfo);
+            vmcs_dump_cpu();
             break;
         case EXIT_REASON_VMCALL:
             //curenv->env_tf.tf_rip+=3;
+            vmcs_dump_cpu();
             exit_handled = handle_vmcall(&curenv->env_tf, &curenv->env_vmxinfo,
                     curenv->env_pml4e);
             break;
