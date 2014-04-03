@@ -536,10 +536,12 @@ sys_ept_map(envid_t srcenvid, void *srcva,
 
     if((perm & __EPTE_WRITE) && (!(*srcva_pte & PTE_W)))
         return -E_INVAL;
-
+	
     srcva = page2kva(pp);
 
     ret = ept_map_hva2gpa(env->env_pml4e, srcva, guest_pa, perm, 1);
+	if(!ret)
+		pp->pp_ref++;
     return ret;
 }
 

@@ -262,11 +262,13 @@ x64_vm_init(void)
     // memory management will go through the page_* functions. In
     // particular, we can now map memory using boot_map_segment or page_insert
     page_init();
-	
+    cprintf("page init complete:\n");	
 	check_page_free_list(1);
+        cprintf("check free page  list done\n");
 	check_page_alloc();
+        cprintf("check page alloc done\n");
 	page_check();
-
+        cprintf("page check doen\n");
     //////////////////////////////////////////////////////////////////////
     // Now we set up virtual memory 
     //////////////////////////////////////////////////////////////////////

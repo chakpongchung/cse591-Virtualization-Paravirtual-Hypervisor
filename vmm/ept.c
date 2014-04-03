@@ -238,16 +238,19 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
     pte_t *pte = NULL;
     int ret = 0;
 
-    struct Page* p = page_lookup(curenv->env_pml4e, hva, &pte);
+//    struct Page* pp = pa2page(rcr3());
 
-    if(pte == NULL)
-        return -E_INVAL;
+//    uint64_t pml4e = page2kva(pp);
+//    struct Page *p = page_lookup(pml4e, hva, &pte);
 
-    if(perm & PTE_W) 
+//    if(pte == NULL)
+//        return -E_INVAL;
+
+/*    if(perm & PTE_W) 
         if(!(*pte & PTE_W))
             return -E_INVAL;
-
-    hpa = PTE_ADDR(*pte);
+*/
+    hpa = PADDR(hva);
 
     ret = ept_lookup_gpa(eptrt, gpa, 1, (epte_t**)&pte);
     if(!ret)
@@ -257,7 +260,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
             if(overwrite)
             {
                 *pte = (pte_t)hpa | perm;
-                p->pp_ref++;
+                //p->pp_ref++;
                 return 0;
             }
             else
@@ -266,7 +269,7 @@ int ept_map_hva2gpa(epte_t* eptrt, void* hva, void* gpa, int perm,
         else
         {
                 *pte = (pte_t)hpa | perm;
-                p->pp_ref++;
+                //p->pp_ref++;
                 return 0;
         }
     }
