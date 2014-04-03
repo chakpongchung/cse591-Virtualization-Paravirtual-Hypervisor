@@ -229,7 +229,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             mmap[2].size = 20;
             mmap[2].base_addr_low = EXTPHYSMEM;
             mmap[2].base_addr_high = 0x0;
-            mmap[2].length_low = gInfo->phys_sz;
+            mmap[2].length_low = gInfo->phys_sz - EXTPHYSMEM;
             mmap[2].length_high = 0x0;
             mmap[2].type = MB_TYPE_USABLE;
 
@@ -239,13 +239,15 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             
 
             memcpy(hva, &mbinfo, sizeof(multiboot_info_t));
-            memcpy((void*)((uint64_t)hva + sizeof(mbinfo)),(void *) mmap, sizeof(memory_map_t));
+            memcpy((void*)((uint64_t)hva + sizeof(mbinfo)),(void *) mmap, sizeof(mmap));
 
             ept_map_hva2gpa(eptrt, hva, (void *)multiboot_map_addr, __EPTE_FULL, 1);
 
             //asm("movq %%rax, %%rbx \n\t");
 
-            //cprintf("e820 map hypercall not implemented\n");	    
+            //cprintf("e820 map hypercall not implemented\n");	   
+
+            tf->tf_regs.reg_rbx = 0x6000;
 	    handled = true;
             cprintf("vmcall handle complete");
 	    break;
