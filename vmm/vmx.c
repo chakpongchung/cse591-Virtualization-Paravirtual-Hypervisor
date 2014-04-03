@@ -428,8 +428,8 @@ void vmexit() {
 
     //sched_yield();
 
-    curenv->env_runs++;
-    vmx_vmrun(curenv);
+    //curenv->env_runs++;
+    //vmx_vmrun(curenv);
 }
 
 void asm_vmrun(struct Trapframe *tf) {

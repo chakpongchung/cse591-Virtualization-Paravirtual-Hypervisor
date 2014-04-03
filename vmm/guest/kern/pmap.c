@@ -263,11 +263,11 @@ x64_vm_init(void)
     // particular, we can now map memory using boot_map_segment or page_insert
     page_init();
     cprintf("page init complete:\n");	
-	check_page_free_list(1);
+	//check_page_free_list(1);
         cprintf("check free page  list done\n");
-	check_page_alloc();
+	//check_page_alloc();
         cprintf("check page alloc done\n");
-	page_check();
+	//page_check();
         cprintf("page check doen\n");
     //////////////////////////////////////////////////////////////////////
     // Now we set up virtual memory 
@@ -329,7 +329,7 @@ x64_vm_init(void)
     /* check_page_free_list(1); */
     /* check_page_alloc(); */
     /* page_check(); */
-    check_page_free_list(0);
+    //check_page_free_list(0);
 }
 
 
