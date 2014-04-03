@@ -217,13 +217,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    //   a pointer to this region in rbx (as a guest physical address).
 	    /* Your code here */
 
-<<<<<<< HEAD
 
-
-
-	    cprintf("e820 map hypercall not implemented\n");	    
-	    handled = false;
-=======
             page = page_alloc(ALLOC_ZERO);
           
             page->pp_ref++;
@@ -270,7 +264,6 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             //cprintf("e820 map hypercall not implemented\n");	    
 	    handled = true;
             cprintf("vmcall handle complete");
->>>>>>> 3dee7eafd761fa54733f75511ac63faeb5645584
 	    break;
 
         case VMX_VMCALL_IPCSEND:
