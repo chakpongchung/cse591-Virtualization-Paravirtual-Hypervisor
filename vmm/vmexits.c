@@ -290,7 +290,8 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    while (1) {
 		//Try sending the value to dst
                 //sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
-                r = sys_ipc_try_send(to_env, value, srcva, perm);
+                r = syscall(12, (uint64_t)to_env, (uint64_t)value, (uint64_t)srcva, (uint64_t)perm, 0);
+                //r = sys_ipc_try_send(to_env, value, srcva, perm);
 		//int r = sys_ipc_try_send(to_env, val, pg, perm);
 
 		if (r == 0)
@@ -298,7 +299,8 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
 			panic("error in sys_ipc_try_send %e\n", r);
 		else if (r == -E_IPC_NOT_RECV) 
-			sys_yield();
+                        syscall(11, 0, 0, 0, 0, 0);
+			//sys_yield();
 	    }
 
 
@@ -312,9 +314,9 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // you should go ahead and increment rip before this call.
 	    /* Your code here */
             gpa_pg  = (void *)tf->tf_regs.reg_rax;
-	    
-            r = sys_ipc_recv(gpa_pg);
-
+            r = syscall(13, (uint64_t)gpa_pg, 0, 0, 0, 0);
+            //r = sys_ipc_recv(gpa_pg);
+            
 	    cprintf("IPC recv hypercall implemented\n");	    
             handled = true;
             break;
