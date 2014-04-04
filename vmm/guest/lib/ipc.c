@@ -146,9 +146,9 @@ ipc_host_recv(void *pg) {
 
 	panic("ipc_recv not implemented");
 */  
-
+//cprintf("ipc_recv implemented in VM guest");
+//    curenv->env_status = ENV_NOT_RUNNABLE;
     return r;
-    //panic("ipc_recv not implemented in VM guest");
 }
 
 // Access to host IPC interface through VMCALL.

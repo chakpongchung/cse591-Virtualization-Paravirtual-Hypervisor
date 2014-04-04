@@ -45,7 +45,8 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
                 	*from_env_store = thisenv->env_ipc_from;
         	if (thisenv->env_ipc_dstva && perm_store != NULL)
                 	*perm_store = thisenv->env_ipc_perm;
-
+                
+                //curenv->env_status = ENV_NOT_RUNNABLE;
 		return thisenv->env_ipc_value; //return the received value
 	}
 

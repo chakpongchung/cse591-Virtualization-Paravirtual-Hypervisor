@@ -71,11 +71,11 @@ sched_yield(void)
                             //cprintf("My VMXON to start guest ");
                             //cprintf("Env type : %d , env_id = %d ", curenv->env_type, curenv->env_id);
                             curenv = &envs[i];
-                            while(1)
-                            {
+                      //      while(1)
+                      //      {
                                 curenv->env_runs++;
                                 vmx_vmrun(&envs[i]);
-                            }
+                      //      }
                         }
                     }
                     else

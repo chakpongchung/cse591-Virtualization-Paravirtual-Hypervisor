@@ -429,7 +429,7 @@ void vmexit() {
     
     //while(1);
 
-    //sched_yield();
+    sched_yield();
 
     //curenv->env_runs++;
     //vmx_vmrun(curenv);
