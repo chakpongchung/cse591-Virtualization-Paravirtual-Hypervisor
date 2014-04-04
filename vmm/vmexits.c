@@ -204,6 +204,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     uint32_t val;
     struct Page *page; 
     uintptr_t *hva;
+
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
 
@@ -277,8 +278,30 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // If the requested environment is the HOST FS, this call should
 	    //  do this translation.
 	    /* Your code here */
-	    cprintf("IPC send hypercall not implemented\n");	    
-	    handled = false;
+            //sys_ipc_try_send(envid_t envid, uint64_t value, void *srcva, int perm)
+
+            to_env  =   tf->tf_rd.reg_rax;
+            value   =   tf->tf_rd.reg_rax;
+            //srcva   =   tf->tf_rd.reg_rax;
+            perm    =   tf->tf_rd.reg_rax;
+            
+
+	    while (1) {
+		//Try sending the value to dst
+                r = sys_ipc_try_send(to_env, value, *srcva, perm);
+		//int r = sys_ipc_try_send(to_env, val, pg, perm);
+
+		if (r == 0)
+			break;
+		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
+			panic("error in sys_ipc_try_send %e\n", r);
+		else if (r == -E_IPC_NOT_RECV) 
+			sys_yield();
+	    }
+
+
+	    cprintf("IPC send hypercall implemented\n");	    
+	    handled = true;
             break;
 
         case VMX_VMCALL_IPCRECV:

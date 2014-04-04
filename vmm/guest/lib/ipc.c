@@ -89,6 +89,30 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 int32_t
 ipc_host_recv(void *pg) {
     // LAB 8: Your code here.
+
+    //If pg is NULL, then set pg to something that sys_ipc_rev can decode
+    if (pg == NULL)
+	    pg=(void*)UTOP;
+
+    //Try receiving value
+    int r = sys_ipc_recv(pg);
+    if (r < 0) {
+/*	    if (from_env_store)
+		    *from_env_store = 0;
+		if (perm_store)
+			*perm_store = 0;
+*/		return r;
+	}
+	else {
+/*		if (from_env_store != NULL)
+                	*from_env_store = thisenv->env_ipc_from;
+        	if (thisenv->env_ipc_dstva && perm_store != NULL)
+                	*perm_store = thisenv->env_ipc_perm;
+*/
+		return 0;//thisenv->env_ipc_value; //return the received value
+	}
+
+//	panic("ipc_recv not implemented");
     panic("ipc_recv not implemented in VM guest");
 }
 
