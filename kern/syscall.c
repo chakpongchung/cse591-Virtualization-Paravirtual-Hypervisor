@@ -647,8 +647,8 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 			return sys_time_msec();
 		case SYS_env_mkguest:
 			return sys_env_mkguest(a1, a2);
-        case SYS_ept_map:
-	    	return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
+                case SYS_ept_map:
+	    	    return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
 		/*case SYS_env_transmit_packet:
 			return sys_env_transmit_packet(a1, (char*)a2, a3);
 		case SYS_env_receive_packet:

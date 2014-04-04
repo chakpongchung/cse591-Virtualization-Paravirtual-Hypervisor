@@ -199,11 +199,13 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     bool handled = false;
     multiboot_info_t mbinfo;
     int perm, r;
-    void *gpa_pg, *hva_pg;
+    void *gpa_pg, *hva_pg, *srcva;
     envid_t to_env;
     uint32_t val;
     struct Page *page; 
     uintptr_t *hva;
+    uint64_t value;
+
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
 
@@ -277,8 +279,33 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // If the requested environment is the HOST FS, this call should
 	    //  do this translation.
 	    /* Your code here */
-	    cprintf("IPC send hypercall not implemented\n");	    
-	    handled = false;
+            //sys_ipc_try_send(envid_t envid, uint64_t value, void *srcva, int perm)
+
+            to_env  =   tf->tf_regs.reg_rax;
+            value   =   tf->tf_regs.reg_rdx;
+            srcva   =   (void *)tf->tf_regs.reg_rcx;
+            perm    =   tf->tf_regs.reg_rbx;
+            
+
+	    while (1) {
+		//Try sending the value to dst
+                //sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
+                r = syscall(12, (uint64_t)to_env, (uint64_t)value, (uint64_t)srcva, (uint64_t)perm, 0);
+                //r = sys_ipc_try_send(to_env, value, srcva, perm);
+		//int r = sys_ipc_try_send(to_env, val, pg, perm);
+
+		if (r == 0)
+			break;
+		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
+			panic("error in sys_ipc_try_send %e\n", r);
+		else if (r == -E_IPC_NOT_RECV) 
+                        syscall(11, 0, 0, 0, 0, 0);
+			//sys_yield();
+	    }
+
+
+	    cprintf("IPC send hypercall implemented\n");	    
+	    handled = true;
             break;
 
         case VMX_VMCALL_IPCRECV:
@@ -286,8 +313,12 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // NB: because recv can call schedule, clobbering the VMCS, 
 	    // you should go ahead and increment rip before this call.
 	    /* Your code here */
-	    cprintf("IPC recv hypercall not implemented\n");	    
-            handled = false;
+            gpa_pg  = (void *)tf->tf_regs.reg_rax;
+            r = syscall(13, (uint64_t)gpa_pg, 0, 0, 0, 0);
+            //r = sys_ipc_recv(gpa_pg);
+            
+	    cprintf("IPC recv hypercall implemented\n");	    
+            handled = true;
             break;
     }
     if(handled) {
