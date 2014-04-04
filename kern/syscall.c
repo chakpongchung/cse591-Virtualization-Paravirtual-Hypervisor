@@ -370,9 +370,20 @@ sys_page_unmap(envid_t envid, void *va)
 sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 {
 	struct Env *env;
-	pte_t *pte;
+	pte_t *pte = NULL;
+        int i = 0;
 
-	if (envid2env(envid, &env, 0) < 0) {
+        if( envid == 1  && curenv->env_type == ENV_TYPE_GUEST )
+        {
+            for ( i = 0; i < NENV; i++) 
+            {
+                if( envs[i].env_type == ENV_TYPE_FS ) {
+                    env = &envs[i];
+                    break;
+                }
+            }   
+        }
+        else if (envid2env(envid, &env, 0) < 0) {
 		cprintf("sys_ipc_try_send failed: Bad env\n");
 		return -E_BAD_ENV;
 	}
@@ -381,6 +392,10 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	    return -E_IPC_NOT_RECV;
 	
 	if ((uint64_t)srcva < UTOP){
+
+
+		struct Page *pp;
+
 		//Check if the page in alligned.
 	   	if ((uint64_t)srcva % PGSIZE != 0) {
 			cprintf("sys_ipc_try_send failed: Page is not alligned\n");
@@ -388,7 +403,22 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 		}
 
 	  	//Check if srcva is mapped to in caller's address space.
-	   	pte = pml4e_walk(curenv->env_pml4e, srcva, 0);
+                if( curenv->env_type != ENV_TYPE_GUEST )
+                {
+	   	    //pte = pml4e_walk(curenv->env_pml4e, srcva, 0);
+	   	    pp = page_lookup(curenv->env_pml4e, srcva, &pte);
+                }
+                else 
+                {
+	   	 //   ept_pml4e_walk(curenv->env_pml4e, srcva, 0, &pte); 
+                    ept_lookup_gpa(curenv->env_pml4e, srcva, 0, &pte);
+                    pp = pa2page((physaddr_t)(PTE_ADDR(*pte)));
+                }
+
+	   	if (!pp) {
+	      		cprintf("\nsys_try_ipc_send: Page not found\n");
+	      		return -1;
+                }
 
 	   	if (!pte || !((*pte) & PTE_P)) {
 	      		cprintf("\nsys_ipc_try_send failed: Page is not mapped to srcva\n");
@@ -409,13 +439,28 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	      		return -E_INVAL; 
 	   	}
 
+	   	// pp = page_lookup(curenv->env_pml4e, srcva, &pte);
+	   
+
+                if( env->env_type != ENV_TYPE_GUEST )
+                {
+	   	    if (page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0)
+	       		return -E_NO_MEM;
+                }
+                else
+                {
+                    if (ept_page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0 )
+                        return -E_NO_MEM;
+                }
+
+	   env->env_ipc_perm = perm;
 	}
 
 	env->env_ipc_recving = 0;
 	env->env_ipc_value = value;
 	env->env_ipc_from = curenv->env_id;
 	env->env_ipc_perm = 0;
-	
+	/*
 	if ((uint64_t)srcva < UTOP) {
 		pte_t *pite;
 		struct Page *pp;
@@ -431,7 +476,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 
 	   env->env_ipc_perm = perm;
 	}
-	
+	*/
 	env->env_status = ENV_RUNNABLE;
 	return 0;
 

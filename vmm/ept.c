@@ -44,7 +44,7 @@ static inline int epte_present(epte_t epte)
 // Hint: Set the permissions of intermediate ept entries to __EPTE_FULL.
 //       The hardware ANDs the permissions at each level, so removing a permission
 //       bit at the last level entry is sufficient (and the bookkeeping is much simpler).
-static int ept_lookup_gpa(epte_t* eptrt, void *gpa, 
+int ept_lookup_gpa(epte_t* eptrt, void *gpa, 
 			  int create, epte_t **epte_out) {
     /* Your code here */
     epte_t * epte;
@@ -215,8 +215,20 @@ void free_guest_mem(epte_t* eptrt) {
 int ept_page_insert(epte_t* eptrt, struct Page* pp, void* gpa, int perm) {
 
     /* Your code here */
-    panic("ept_page_insert not implemented\n");
+    pte_t *pte = NULL;
+    int ret = ept_pml4e_walk( eptrt, (void*) gpa, 1, &pte);
+    if (pte == NULL) return -E_NO_MEM;
+
+    pp->pp_ref++;
+    if(*pte & PTE_P)
+          page_remove(eptrt, gpa);
+
+    *pte = ((uint64_t)page2pa(pp)) | perm | __EPTE_IPAT | __EPTE_TYPE(EPTE_TYPE_WB);
     return 0;
+
+
+    //panic("ept_page_insert not implemented\n");
+    //return 0;
 }
 
 // Map host virtual address hva to guest physical address gpa,
