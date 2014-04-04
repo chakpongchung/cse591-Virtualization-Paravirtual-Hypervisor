@@ -26,7 +26,7 @@
 ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 {
 	// LAB 4: Your code here.
-
+        cprintf("Starting recving\n");
 	//If pg is NULL, then set pg to something that sys_ipc_rev can decode
 	if (pg == NULL)
 		pg=(void*)UTOP;
@@ -85,12 +85,46 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 
 #ifdef VMM_GUEST
 
-// Access to host IPC interface through VMCALL.
-// Should behave similarly to ipc_recv, except replacing the system call with a vmcall.
 int32_t
 ipc_host_recv(void *pg) {
     // LAB 8: Your code here.
-    panic("ipc_recv not implemented in VM guest");
+
+    uint64_t addr = (uint64_t)pg;                                                                                                                                   
+    if (pg == NULL)
+        pg=(void*)UTOP;
+   
+    
+    if( (vpml4e[VPML4E(addr)] & PTE_P)   &&   (vpde[VPDPE(addr)] & PTE_P)                                                                                     
+                        &&  (vpd[VPD(addr)] & PTE_P)  &&  (vpt[VPN(addr)] & PTE_P)  )
+    {
+           pg = (void *) PTE_ADDR( vpt[VPN(addr)] );
+    }
+
+	//Try receiving value
+	//int r = sys_ipc_recv(pg);
+
+	int r = vm_call( VMX_VMCALL_IPCRECV, (uint64_t) pg , 0, 0, 0, 0 );
+/*	if (r < 0) {
+		if (from_env_store)
+			*from_env_store = 0;
+		if (perm_store)
+			*perm_store = 0;
+		return r;
+	}
+	else {
+		if (from_env_store != NULL)
+                	*from_env_store = thisenv->env_ipc_from;
+        	if (thisenv->env_ipc_dstva && perm_store != NULL)
+                	*perm_store = thisenv->env_ipc_perm;
+
+		return thisenv->env_ipc_value; //return the received value
+	}
+
+	panic("ipc_recv not implemented");
+*/  
+//cprintf("ipc_recv implemented in VM guest");
+//    curenv->env_status = ENV_NOT_RUNNABLE;
+    return r;
 }
 
 // Access to host IPC interface through VMCALL.
@@ -99,7 +133,34 @@ void
 ipc_host_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
     // LAB 8: Your code here.
-    panic("ipc_send not implemented in VM guest");
+    uint64_t addr = (uint64_t)pg;
+	if (pg == NULL)
+                pg=(void*)UTOP;
+
+    
+        if( (vpml4e[VPML4E(addr)] & PTE_P)   &&   (vpde[VPDPE(addr)] & PTE_P)                                                                                     
+                        &&  (vpd[VPD(addr)] & PTE_P)  &&  (vpt[VPN(addr)] & PTE_P)  )
+        {
+
+                pg = (void *) PTE_ADDR( vpt[VPN(addr)] );
+
+        }
+
+	//Loop until succeeded/
+	while (1) {
+		//Try sending the value to dst
+		//int r = sys_ipc_try_send(to_env, val, pg, perm);
+
+		int r = vm_call( VMX_VMCALL_IPCSEND, (uint64_t) (to_env) , (uint64_t) val, (uint64_t) pg, (uint64_t) perm, 0 );
+
+		if (r == 0)
+			break;
+		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
+			panic("error in sys_ipc_try_send %e\n", r);
+		else if (r == -E_IPC_NOT_RECV) 
+			sys_yield();
+	}
+//    panic("ipc_send not implemented in VM guest");
 }
 
 #endif
