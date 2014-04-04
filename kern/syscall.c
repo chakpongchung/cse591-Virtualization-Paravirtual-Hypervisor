@@ -372,7 +372,8 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	struct Env *env;
 	pte_t *pte = NULL;
         int i = 0;
-
+        struct Page *pp = NULL;
+/*
         if( envid == 1  && curenv->env_type == ENV_TYPE_GUEST )
         {
             for ( i = 0; i < NENV; i++) 
@@ -383,7 +384,8 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
                 }
             }   
         }
-        else if (envid2env(envid, &env, 0) < 0) {
+*/
+        if (envid2env(envid, &env, 0) < 0) {
 		cprintf("sys_ipc_try_send failed: Bad env\n");
 		return -E_BAD_ENV;
 	}
@@ -394,7 +396,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	if ((uint64_t)srcva < UTOP){
 
 
-		struct Page *pp;
+		// struct Page *pp;
 
 		//Check if the page in alligned.
 	   	if ((uint64_t)srcva % PGSIZE != 0) {
@@ -410,8 +412,8 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
                 }
                 else 
                 {
-	   	 //   ept_pml4e_walk(curenv->env_pml4e, srcva, 0, &pte); 
-                    ept_lookup_gpa(curenv->env_pml4e, srcva, 0, &pte);
+	   	    ept_pml4e_walk(curenv->env_pml4e, srcva, 0, &pte); 
+                    // ept_lookup_gpa(curenv->env_pml4e, srcva, 0, &pte);
                     pp = pa2page((physaddr_t)(PTE_ADDR(*pte)));
                 }
 
@@ -441,28 +443,15 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 
 	   	// pp = page_lookup(curenv->env_pml4e, srcva, &pte);
 	   
-
-                if( env->env_type != ENV_TYPE_GUEST )
-                {
-	   	    if (page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0)
-	       		return -E_NO_MEM;
-                }
-                else
-                {
-                    if (ept_page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0 )
-                        return -E_NO_MEM;
-                }
-
-	   env->env_ipc_perm = perm;
 	}
 
 	env->env_ipc_recving = 0;
 	env->env_ipc_value = value;
 	env->env_ipc_from = curenv->env_id;
 	env->env_ipc_perm = 0;
-	/*
+
 	if ((uint64_t)srcva < UTOP) {
-		pte_t *pite;
+	/*	pte_t *pite;
 		struct Page *pp;
 	   	pp = page_lookup(curenv->env_pml4e, srcva, &pte);
 	   
@@ -473,10 +462,20 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 
 	   	if (page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0)
 	       		return -E_NO_MEM;
-
+        */
+                if( env->env_type != ENV_TYPE_GUEST )
+                {
+	   	    if (page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0)
+	       		return -E_NO_MEM;
+                }
+                else
+                {
+                    if (ept_page_insert(env->env_pml4e, pp, env->env_ipc_dstva, perm) < 0 )
+                        return -E_NO_MEM;
+                }
 	   env->env_ipc_perm = perm;
 	}
-	*/
+	
 	env->env_status = ENV_RUNNABLE;
 	return 0;
 

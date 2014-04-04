@@ -4,6 +4,7 @@
 #include <vmm/vmexits.h>
 #include <vmm/ept.h>
 #include <inc/x86.h>
+#include <kern/sched.h>
 #include <inc/assert.h>
 #include <kern/pmap.h>
 #include <kern/console.h>
@@ -198,9 +199,9 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 {
     bool handled = false;
     multiboot_info_t mbinfo;
-    int perm, r;
+    int perm, r, i;
     void *gpa_pg, *hva_pg, *srcva;
-    envid_t to_env;
+    uint64_t to_env;
     uint32_t val;
     struct Page *page; 
     uintptr_t *hva;
@@ -281,16 +282,26 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    /* Your code here */
             //sys_ipc_try_send(envid_t envid, uint64_t value, void *srcva, int perm)
 
-            to_env  =   tf->tf_regs.reg_rax;
-            value   =   tf->tf_regs.reg_rdx;
-            srcva   =   (void *)tf->tf_regs.reg_rcx;
-            perm    =   tf->tf_regs.reg_rbx;
-            
+            to_env  =   tf->tf_regs.reg_rdx;
+            value   =   tf->tf_regs.reg_rcx;
+            srcva   =   (void *)tf->tf_regs.reg_rbx;
+            perm    =   tf->tf_regs.reg_rdi;
+
+            if( to_env  == 1  && curenv->env_type == ENV_TYPE_GUEST )
+            {
+                for ( i = 0; i < NENV; i++) 
+                {
+                    if( envs[i].env_type == ENV_TYPE_FS ) {
+                        to_env = (uint64_t)(envs[i].env_id);
+                        break;
+                    }
+                }   
+            }
 
 	    while (1) {
 		//Try sending the value to dst
                 //sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
-                r = syscall(12, (uint64_t)to_env, (uint64_t)value, (uint64_t)srcva, (uint64_t)perm, 0);
+                r = syscall( SYS_ipc_try_send, (uint64_t)to_env, (uint64_t)value, (uint64_t)srcva, (uint64_t)perm, 0);
                 //r = sys_ipc_try_send(to_env, value, srcva, perm);
 		//int r = sys_ipc_try_send(to_env, val, pg, perm);
 
@@ -299,11 +310,10 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
 			panic("error in sys_ipc_try_send %e\n", r);
 		else if (r == -E_IPC_NOT_RECV) 
-                        syscall(11, 0, 0, 0, 0, 0);
-			//sys_yield();
+			sched_yield();
 	    }
 
-
+            tf->tf_regs.reg_rax = (uint64_t)r;
 	    cprintf("IPC send hypercall implemented\n");	    
 	    handled = true;
             break;
@@ -313,14 +323,15 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // NB: because recv can call schedule, clobbering the VMCS, 
 	    // you should go ahead and increment rip before this call.
 	    /* Your code here */
-            gpa_pg  = (void *)tf->tf_regs.reg_rax;
-            r = syscall(13, (uint64_t)gpa_pg, 0, 0, 0, 0);
+            gpa_pg  = (void *)tf->tf_regs.reg_rdx;
+            r = syscall(SYS_ipc_recv, (uint64_t)gpa_pg, 0, 0, 0, 0);
             //r = sys_ipc_recv(gpa_pg);
             
 	    cprintf("IPC recv hypercall implemented\n");	    
             handled = true;
             break;
     }
+
     if(handled) {
 	    /* Advance the program counter by the length of the vmcall instruction. 
 	     * 
