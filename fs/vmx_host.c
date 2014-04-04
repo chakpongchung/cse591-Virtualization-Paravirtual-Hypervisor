@@ -69,8 +69,11 @@ host_write(uint32_t secno, const void *src, size_t nsecs)
 host_ipc_init()
 {
     int r;
-    if ((r = fd_alloc(&host_fd)) < 0)
+    /*if ((r = fd_alloc(&host_fd)) < 0)
         panic("Couldn't allocate an fd!");
+    */
+    
+    host_fd = (struct Fd *)malloc(sizeof(struct Fd)); 
 
     strcpy(host_fsipcbuf.open.req_path, HOST_FS_FILE);
     host_fsipcbuf.open.req_omode = O_RDWR;
