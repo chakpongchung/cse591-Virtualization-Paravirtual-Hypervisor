@@ -199,11 +199,12 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     bool handled = false;
     multiboot_info_t mbinfo;
     int perm, r;
-    void *gpa_pg, *hva_pg;
+    void *gpa_pg, *hva_pg, *srcva;
     envid_t to_env;
     uint32_t val;
     struct Page *page; 
     uintptr_t *hva;
+    uint64_t value;
 
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
@@ -280,15 +281,16 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    /* Your code here */
             //sys_ipc_try_send(envid_t envid, uint64_t value, void *srcva, int perm)
 
-            to_env  =   tf->tf_rd.reg_rax;
-            value   =   tf->tf_rd.reg_rax;
-            //srcva   =   tf->tf_rd.reg_rax;
-            perm    =   tf->tf_rd.reg_rax;
+            to_env  =   tf->tf_regs.reg_rax;
+            value   =   tf->tf_regs.reg_rdx;
+            srcva   =   (void *)tf->tf_regs.reg_rcx;
+            perm    =   tf->tf_regs.reg_rbx;
             
 
 	    while (1) {
 		//Try sending the value to dst
-                r = sys_ipc_try_send(to_env, value, *srcva, perm);
+                //sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
+                r = sys_ipc_try_send(to_env, value, srcva, perm);
 		//int r = sys_ipc_try_send(to_env, val, pg, perm);
 
 		if (r == 0)
@@ -309,8 +311,12 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // NB: because recv can call schedule, clobbering the VMCS, 
 	    // you should go ahead and increment rip before this call.
 	    /* Your code here */
-	    cprintf("IPC recv hypercall not implemented\n");	    
-            handled = false;
+            gpa_pg  = (void *)tf->tf_regs.reg_rax;
+	    
+            r = sys_ipc_recv(gpa_pg);
+
+	    cprintf("IPC recv hypercall implemented\n");	    
+            handled = true;
             break;
     }
     if(handled) {
