@@ -71,7 +71,10 @@ host_ipc_init()
     int r;
     if ((r = fd_alloc(&host_fd)) < 0)
         panic("Couldn't allocate an fd!");
-
+    
+    r = sys_page_alloc(0, host_fd, PTE_P | PTE_U | PTE_W)
+    if (r == 0)
+    {
     strcpy(host_fsipcbuf.open.req_path, HOST_FS_FILE);
     host_fsipcbuf.open.req_omode = O_RDWR;
 
@@ -79,6 +82,8 @@ host_ipc_init()
         fd_close(host_fd, 0);
         panic("Couldn't open host file!");
     }
+    }
+    panic("Not Valid ALloc");
 
 }
 
