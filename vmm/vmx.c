@@ -122,7 +122,7 @@ int vmx_init_vmxon() {
     } else if ( !vmx_check_ept() ) {
        return -E_NO_EPT;
     } 
-    cprintf("VMX Support Check successful..............\n");
+//    cprintf("VMX Support Check successful..............\n");
     //Alocate mem and init the VMXON region.
     struct Page *p_vmxon_region = vmx_init_vmcs();
     if(!p_vmxon_region)
@@ -576,7 +576,7 @@ void asm_vmrun(struct Trapframe *tf) {
                         , "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
     );
     
-    cprintf("\n ------------------------Test Checkpoint ----------------------\n");
+    //cprintf("\n ------------------------Test Checkpoint ----------------------\n");
 
     if(tf->tf_es) {
         cprintf("Error during VMLAUNCH/VMRESUME\n");

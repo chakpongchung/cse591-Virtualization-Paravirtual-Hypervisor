@@ -34,7 +34,7 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 	//Try receiving value
 	int r = sys_ipc_recv(pg);
         
-        cprintf("ipc recving id, type, r= %d , %d, %d\n", thisenv->env_id, thisenv->env_type, r);
+        //cprintf("ipc recving id, type, r= %d , %d, %d\n", thisenv->env_id, thisenv->env_type, r);
 
 	if (r < 0) {
 		if (from_env_store)
@@ -68,8 +68,8 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
     // LAB 4: Your code here.
-     cprintf("IPc send called from host env %d of type %d , to dest env %d of type.\n",
-                   thisenv->env_id, thisenv->env_type, to_env);       
+    // cprintf("IPc send called from host env %d of type %d , to dest env %d of type.\n",
+    //               thisenv->env_id, thisenv->env_type, to_env);       
         if (pg == NULL)
                 pg=(void*)UTOP;
 

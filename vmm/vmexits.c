@@ -324,7 +324,8 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // you should go ahead and increment rip before this call.
 	    /* Your code here */
             gpa_pg  = (void *)tf->tf_regs.reg_rdx;
-            tf->tf_rip+=3;
+            tf->tf_rip += vmcs_read32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH);
+            //tf->tf_rip+=3;
 
             r = syscall(SYS_ipc_recv, (uint64_t)gpa_pg, 0, 0, 0, 0);
             //r = sys_ipc_recv(gpa_pg);
@@ -341,7 +342,8 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	     */
 	    /* Your code here */
             cprintf("VMCALL handled \n");
-            tf->tf_rip+=3;
+            tf->tf_rip += vmcs_read32(VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH);
+            //tf->tf_rip+=3;
     }
     return handled;
 }

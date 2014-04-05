@@ -15,7 +15,7 @@ vmxon() {
             cprintf("Error executing VMXON: %e\n", r);
             return r;
         }
-        cprintf("Env type : %d , env_id = %d ", curenv->env_type, curenv->env_id);
+//        cprintf("Env type : %d , env_id = %d ", curenv->env_type, curenv->env_id);
         cprintf("VMXON\n");
     }
     return 0;
