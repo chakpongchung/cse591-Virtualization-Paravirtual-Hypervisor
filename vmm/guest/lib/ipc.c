@@ -126,7 +126,7 @@ ipc_host_recv(void *pg) {
 
 	//Try receiving value
 	//int r = sys_ipc_recv(pg);
-
+        cprintf("sending recv to host from guest");
 	int r = vm_call( VMX_VMCALL_IPCRECV, (uint64_t) pg , 0, 0, 0, 0 );
 /*	if (r < 0) {
 		if (from_env_store)
@@ -176,9 +176,12 @@ ipc_host_send(envid_t to_env, uint32_t val, void *pg, int perm)
 		//int r = sys_ipc_try_send(to_env, val, pg, perm);
 
 		int r = vm_call( VMX_VMCALL_IPCSEND, (uint64_t) (to_env) , (uint64_t) val, (uint64_t) pg, (uint64_t) perm, 0 );
-
+                
 		if (r == 0)
-			break;
+		{
+                    cprintf("Host sending message..... \n");
+                    break;
+                }
 		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
 			panic("error in sys_ipc_try_send %e\n", r);
 		else if (r == -E_IPC_NOT_RECV) 

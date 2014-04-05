@@ -385,14 +385,21 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
             }   
         }
 */
+
+     cprintf("IPc try send called from host env %d of type %d , to dest env %d of type.\n",
+                   curenv->env_id, curenv->env_type, envid);       
+    
         if (envid2env(envid, &env, 0) < 0) {
 		cprintf("sys_ipc_try_send failed: Bad env\n");
 		return -E_BAD_ENV;
 	}
 
 	if ((env->env_status != ENV_NOT_RUNNABLE) || (env->env_ipc_recving != 1))
+        {
+            cprintf("%d failed to ipc send to (id, type, status , ipc_recv_flag )-- > (%d , %d, %d, %d).\n",
+            curenv->env_id, env->env_id, env->env_type, env->env_status, env->env_ipc_recving); 
 	    return -E_IPC_NOT_RECV;
-	
+        }	
 	if ((uint64_t)srcva < UTOP){
 
 
@@ -475,7 +482,7 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
                 }
 	   env->env_ipc_perm = perm;
 	}
-	
+        cprintf("IPC Trysend in host Env Runnable = %d , %d\n", env->env_id, env->env_type);
 	env->env_status = ENV_RUNNABLE;
 	return 0;
 
@@ -498,7 +505,10 @@ sys_ipc_recv(void *dstva)
 {
 	// LAB 4: Your code here.
 	if (!curenv)
+        {
+                cprintf("invalid curenv\n");
 		return -E_INVAL;
+        }
 	if ((uint64_t)dstva > UTOP || (ROUNDDOWN(dstva,PGSIZE)!=dstva && ROUNDUP(dstva,PGSIZE)!=dstva)) {
 		cprintf("error dstva is not valid dstva=%x\n",dstva);
 		return -E_INVAL;
@@ -513,7 +523,8 @@ sys_ipc_recv(void *dstva)
         curenv->env_ipc_from = 0;
         curenv->env_ipc_recving = 1; //Receiver is ready to listen
         curenv->env_status = ENV_NOT_RUNNABLE; //Block the execution of current env.
-
+        //cprintf("Sched Yield Called Envid:%d \n", curenv->env_id);
+        cprintf("IPC rcv in host Env Not Runnable = %d , %d\n", curenv->env_id, curenv->env_type);
 	sched_yield(); //Give up the cpu. Don't return, instead env_run some other env.
 	
 	panic("sys_ipc_recv not implemented");

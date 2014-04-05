@@ -26,13 +26,16 @@
 ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 {
 	// LAB 4: Your code here.
-        cprintf("Starting recving\n");
+//        cprintf("Starting recving\n");
 	//If pg is NULL, then set pg to something that sys_ipc_rev can decode
 	if (pg == NULL)
 		pg=(void*)UTOP;
 
 	//Try receiving value
 	int r = sys_ipc_recv(pg);
+        
+        cprintf("ipc recving id, type, r= %d , %d, %d\n", thisenv->env_id, thisenv->env_type, r);
+
 	if (r < 0) {
 		if (from_env_store)
 			*from_env_store = 0;
@@ -65,7 +68,8 @@ ipc_recv(envid_t *from_env_store, void *pg, int *perm_store)
 ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
 {
     // LAB 4: Your code here.
-    //If pg is NULL, then set pg to something that sys_ipc_rev can decode
+     cprintf("IPc send called from host env %d of type %d , to dest env %d of type.\n",
+                   thisenv->env_id, thisenv->env_type, to_env);       
         if (pg == NULL)
                 pg=(void*)UTOP;
 
@@ -141,9 +145,7 @@ ipc_host_send(envid_t to_env, uint32_t val, void *pg, int perm)
         if( (vpml4e[VPML4E(addr)] & PTE_P)   &&   (vpde[VPDPE(addr)] & PTE_P)                                                                                     
                         &&  (vpd[VPD(addr)] & PTE_P)  &&  (vpt[VPN(addr)] & PTE_P)  )
         {
-
                 pg = (void *) PTE_ADDR( vpt[VPN(addr)] );
-
         }
 
 	//Loop until succeeded/

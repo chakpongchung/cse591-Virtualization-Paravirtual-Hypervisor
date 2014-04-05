@@ -298,20 +298,20 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
                 }   
             }
 
-	    while (1) {
+	    //while (1) {
 		//Try sending the value to dst
                 //sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
                 r = syscall( SYS_ipc_try_send, (uint64_t)to_env, (uint64_t)value, (uint64_t)srcva, (uint64_t)perm, 0);
                 //r = sys_ipc_try_send(to_env, value, srcva, perm);
 		//int r = sys_ipc_try_send(to_env, val, pg, perm);
-
+        /*
 		if (r == 0)
 			break;
 		if (r < 0 && r != -E_IPC_NOT_RECV) //Receiver is not ready to receive.
 			panic("error in sys_ipc_try_send %e\n", r);
 		else if (r == -E_IPC_NOT_RECV) 
 			sched_yield();
-	    }
+	    }*/
 
             tf->tf_regs.reg_rax = (uint64_t)r;
 	    cprintf("IPC send hypercall implemented\n");	    
@@ -326,6 +326,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             gpa_pg  = (void *)tf->tf_regs.reg_rdx;
             r = syscall(SYS_ipc_recv, (uint64_t)gpa_pg, 0, 0, 0, 0);
             //r = sys_ipc_recv(gpa_pg);
+            tf->tf_rip+=3;
             
 	    cprintf("IPC recv hypercall implemented\n");	    
             handled = true;
@@ -338,6 +339,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	     * Hint: The TA solution does not hard-code the length of the vmcall instruction.
 	     */
 	    /* Your code here */
+            cprintf("VMCALL handled \n");
             tf->tf_rip+=3;
     }
     return handled;

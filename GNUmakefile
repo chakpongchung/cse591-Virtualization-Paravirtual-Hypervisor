@@ -183,7 +183,7 @@ pre-qemu: .gdbinit
 
 guestvm: $(GUESTDIR)/$(OBJDIR)/kern/kernel $(GUESTDIR)/$(OBJDIR)/boot/boot
 
-BOCHS := /home/cse591/bochs-gdb/bin/bochs
+BOCHS := bochs
 BOCHSOPTS = -q
 BOCHSOPTS += $(BOCHSEXTRA)
 
