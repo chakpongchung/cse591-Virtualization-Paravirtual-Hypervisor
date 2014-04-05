@@ -324,9 +324,10 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    // you should go ahead and increment rip before this call.
 	    /* Your code here */
             gpa_pg  = (void *)tf->tf_regs.reg_rdx;
+            tf->tf_rip+=3;
+
             r = syscall(SYS_ipc_recv, (uint64_t)gpa_pg, 0, 0, 0, 0);
             //r = sys_ipc_recv(gpa_pg);
-            tf->tf_rip+=3;
             
 	    cprintf("IPC recv hypercall implemented\n");	    
             handled = true;

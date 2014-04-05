@@ -90,6 +90,13 @@ ipc_send(envid_t to_env, uint32_t val, void *pg, int perm)
     //If pg is NULL, then set pg to something that sys_ipc_rev can decode
         if (pg == NULL)
                 pg=(void*)UTOP;
+    uint64_t addr = (uint64_t)pg;                                                                                                                                   
+    
+    if( (vpml4e[VPML4E(addr)] & PTE_P)   &&   (vpde[VPDPE(addr)] & PTE_P)                                                                                     
+                        &&  (vpd[VPD(addr)] & PTE_P)  &&  (vpt[VPN(addr)] & PTE_P)  )
+    {
+           pg = (void *) PTE_ADDR( vpt[VPN(addr)] );
+    }
 
 	//Loop until succeeded/
 	while (1) {
@@ -113,10 +120,10 @@ int32_t
 ipc_host_recv(void *pg) {
     // LAB 8: Your code here.
 
-    uint64_t addr = (uint64_t)pg;                                                                                                                                   
     if (pg == NULL)
         pg=(void*)UTOP;
    
+    uint64_t addr = (uint64_t)pg;                                                                                                                                   
     
     if( (vpml4e[VPML4E(addr)] & PTE_P)   &&   (vpde[VPDPE(addr)] & PTE_P)                                                                                     
                         &&  (vpd[VPD(addr)] & PTE_P)  &&  (vpt[VPN(addr)] & PTE_P)  )
