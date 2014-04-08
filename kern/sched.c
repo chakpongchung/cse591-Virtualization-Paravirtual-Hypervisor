@@ -67,7 +67,7 @@ sched_yield(void)
                 {
                     if (envs[i].env_type == ENV_TYPE_GUEST && envs[i].env_status == ENV_RUNNABLE)                                                                            
                     {
-                        cprintf("Found and Env Guest");
+//                        cprintf("Found and Env Guest");
                         if ( !vmxon())
                         {
                             //cprintf("My VMXON to start guest ");

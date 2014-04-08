@@ -380,7 +380,7 @@ void vmexit() {
     //exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
 
     exit_reason = vmcs_read32(VMCS_32BIT_VMEXIT_REASON);
-    cprintf( "---VMEXIT Reason: %d : %16x---\n", exit_reason, exit_reason & EXIT_REASON_MASK );
+    //cprintf( "---VMEXIT Reason: %d : %16x---\n", exit_reason, exit_reason & EXIT_REASON_MASK );
     //cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     
      /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
@@ -388,11 +388,11 @@ void vmexit() {
     switch(exit_reason & EXIT_REASON_MASK) {
         case EXIT_REASON_RDMSR:
             exit_handled = handle_rdmsr(&curenv->env_tf, &curenv->env_vmxinfo);
-            vmcs_dump_cpu();
+       //     vmcs_dump_cpu();
             break;
         case EXIT_REASON_WRMSR:
             exit_handled = handle_wrmsr(&curenv->env_tf, &curenv->env_vmxinfo);
-            vmcs_dump_cpu();
+        //    vmcs_dump_cpu();
             break;
         case EXIT_REASON_EPT_VIOLATION:
             exit_handled = handle_eptviolation(curenv->env_pml4e, &curenv->env_vmxinfo);
@@ -402,11 +402,11 @@ void vmexit() {
             break;
         case EXIT_REASON_CPUID:
             exit_handled = handle_cpuid(&curenv->env_tf, &curenv->env_vmxinfo);
-            vmcs_dump_cpu();
+        //    vmcs_dump_cpu();
             break;
         case EXIT_REASON_VMCALL:
             //curenv->env_tf.tf_rip+=3;
-            vmcs_dump_cpu();
+        //    vmcs_dump_cpu();
             exit_handled = handle_vmcall(&curenv->env_tf, &curenv->env_vmxinfo,
                     curenv->env_pml4e);
             break;
@@ -437,11 +437,11 @@ void vmexit() {
 
 void asm_vmrun(struct Trapframe *tf) {
 
-    cprintf("VMRUN\n");
+    //cprintf("VMRUN\n");
     // NOTE: Since we re-use Trapframe structure, tf.tf_err contains the value
     // of cr2 of the guest.
     tf->tf_ds = curenv->env_runs;
-    cprintf("env_runs = %d type = %d, env_id = %d\n", tf->tf_ds, curenv->env_type, curenv->env_id);
+    //cprintf("env_runs = %d type = %d, env_id = %d\n", tf->tf_ds, curenv->env_type, curenv->env_id);
     tf->tf_es = 0;
     asm(
             "push %%rdx; push %%rbp;"
@@ -629,7 +629,7 @@ bitmap_setup(struct VmxGuestInfo *ginfo) {
 int vmx_vmrun( struct Env *e ) {
 
    
-   cprintf("Here\n");
+   //cprintf("Here\n");
     if ( e->env_type != ENV_TYPE_GUEST ) {
         return -E_INVAL;
     }

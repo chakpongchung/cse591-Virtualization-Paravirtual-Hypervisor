@@ -373,18 +373,6 @@ sys_ipc_try_send(envid_t envid, uint32_t value, void *srcva, unsigned perm)
 	pte_t *pte = NULL;
         int i = 0;
         struct Page *pp = NULL;
-/*
-        if( envid == 1  && curenv->env_type == ENV_TYPE_GUEST )
-        {
-            for ( i = 0; i < NENV; i++) 
-            {
-                if( envs[i].env_type == ENV_TYPE_FS ) {
-                    env = &envs[i];
-                    break;
-                }
-            }   
-        }
-*/
 
 //     cprintf("IPc try send called from host env %d of type %d , to dest env %d of type.\n",
 //                   curenv->env_id, curenv->env_type, envid);       
