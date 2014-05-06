@@ -84,11 +84,15 @@ bool
 handle_eptviolation(uint64_t *eptrt, struct VmxGuestInfo *ginfo) {
     uint64_t gpa = vmcs_read64(VMCS_64BIT_GUEST_PHYSICAL_ADDR);
     int r;
+//    cprintf("Test GPA 2: %x \t", gpa);
     if(gpa < 0xA0000 || (gpa >= 0x100000 && gpa < ginfo->phys_sz)) {
         // Allocate a new page to the guest.
         struct Page *p = page_alloc(0);
         if(!p)
+        {
+//            cprintf("Test GPA 1: %x", gpa);
             return false;
+        }
         p->pp_ref += 1;
         r = ept_map_hva2gpa(eptrt, 
                 page2kva(p), (void *)ROUNDDOWN(gpa, PGSIZE), __EPTE_FULL, 0);
@@ -341,7 +345,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             handled = true;
             break;
 
-        case  VMX_VMCALL_PRINTF:
+        case VMX_VMCALL_PRINTF:
             print_fmt  =   tf->tf_regs.reg_rdx;
             print_ap   =   tf->tf_regs.reg_rcx;
             ept_pml4e_walk(curenv->env_pml4e, (void *)print_fmt, 0, &pte_fmt);
@@ -351,8 +355,9 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             ept_pml4e_walk(curenv->env_pml4e, (void *)print_ap, 0, &pte_ap);
             pp = pa2page((physaddr_t)(PTE_ADDR(*pte_ap)));
             print_ap = (uint64_t) page2kva( pp );
+            cprintf ("\nPrint AP contents : %x\n", print_ap);
 
-            r = vcprintf((char *) print_fmt, *((va_list *) print_ap) );
+            r = vcprintf((char *) print_fmt, *((va_list *) print_ap));
             tf->tf_regs.reg_rax = (uint64_t)r;
 
            handled = true;

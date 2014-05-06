@@ -44,7 +44,7 @@ vcprintf(const char *fmt, va_list ap)
 {
 
     pte_t *pte_fmt = pml4e_walk(curenv->env_pml4e, (void*)fmt, 0);
-    pte_t *pte_ap = pml4e_walk(curenv->env_pml4e, (void*) &ap, 0);
+    pte_t *pte_ap = pml4e_walk(curenv->env_pml4e, (void*) ap, 0);
 
 
     int r = vm_call( VMX_VMCALL_PRINTF, (uint64_t) PTE_ADDR(*pte_fmt), (uint64_t) PTE_ADDR(*pte_ap), 0, 0, 0 );

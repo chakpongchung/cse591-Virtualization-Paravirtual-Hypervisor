@@ -42,15 +42,15 @@ multiboot_read(multiboot_info_t* mbinfo, size_t* basemem, size_t* extmem) {
     memory_map_t* mmap_base = (memory_map_t*)(uintptr_t)mbinfo->mmap_addr;
     memory_map_t* mmap_list[mbinfo->mmap_length/ (sizeof(memory_map_t))];
 
-    cprintf("\ne820 MEMORY MAP\n");
+//    cprintf("\ne820 MEMORY MAP\n");
     for(i = 0; i < (mbinfo->mmap_length / (sizeof(memory_map_t))); i++) {
         memory_map_t* mmap = &mmap_base[i];
 
         uint64_t addr = APPEND_HILO(mmap->base_addr_high, mmap->base_addr_low);
         uint64_t len = APPEND_HILO(mmap->length_high, mmap->length_low);
 
-        cprintf("size: %d, address: 0x%016x, length: 0x%016x, type: %x\n", mmap->size, 
-                addr, len, mmap->type);
+//        cprintf("size: %d, address: 0x%016x, length: 0x%016x, type: %x\n", mmap->size, 
+//                addr, len, mmap->type);
 
         if(mmap->type > 5 || mmap->type < 1)
             mmap->type = MB_TYPE_RESERVED;
@@ -71,7 +71,7 @@ multiboot_read(multiboot_info_t* mbinfo, size_t* basemem, size_t* extmem) {
         }
         mmap_list[j] = mmap;  
     }
-    cprintf("\n");
+ //   cprintf("\n");
 
     // Sanitize the list
     for(i=1;i < (mbinfo->mmap_length / (sizeof(memory_map_t))); i++) {
@@ -142,13 +142,13 @@ i386_detect_memory(void)
     else
         npages = npages_basemem;
 
-
+/*
     cprintf("Physical memory: %uM available, base = %uK, extended = %uK, npages = %d\n",
             npages * PGSIZE / (1024 * 1024),
             npages_basemem * PGSIZE / 1024,
             npages_extmem * PGSIZE / 1024,
             npages);
-
+*/
 }
 
 
@@ -262,13 +262,13 @@ x64_vm_init(void)
     // memory management will go through the page_* functions. In
     // particular, we can now map memory using boot_map_segment or page_insert
     page_init();
-    cprintf("page init complete:\n");	
+//    cprintf("page init complete:\n");	
 	//check_page_free_list(1);
-        cprintf("check free page  list done\n");
+//        cprintf("check free page  list done\n");
 	//check_page_alloc();
-        cprintf("check page alloc done\n");
+//        cprintf("check page alloc done\n");
 	//page_check();
-        cprintf("page check doen\n");
+//        cprintf("page check doen\n");
     //////////////////////////////////////////////////////////////////////
     // Now we set up virtual memory 
     //////////////////////////////////////////////////////////////////////
@@ -1062,7 +1062,7 @@ check_boot_pml4e(pml4e_t *pml4e)
                 break;
         }
     }
-    cprintf("check_boot_pml4e() succeeded!\n");
+//    cprintf("check_boot_pml4e() succeeded!\n");
 }
 
 // This function returns the physical address of the page containing 'va',
