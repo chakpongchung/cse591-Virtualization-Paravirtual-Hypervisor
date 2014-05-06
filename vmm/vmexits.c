@@ -15,6 +15,7 @@
 #include <kern/env.h>
 #include <inc/ept.h>
 
+
 bool
 find_msr_in_region(uint32_t msr_idx, uintptr_t *area, int area_sz, struct vmx_msr_entry **msr_entry) {
     struct vmx_msr_entry *entry = (struct vmx_msr_entry *)area;
@@ -207,6 +208,12 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     uintptr_t *hva;
     uint64_t value;
 
+    uint64_t print_fmt;
+    uint64_t print_ap;
+    pte_t *pte_fmt;
+    pte_t *pte_ap;
+    struct Page *pp = NULL;
+
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
 
@@ -333,6 +340,23 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    cprintf("IPC recv hypercall implemented\n");	    
             handled = true;
             break;
+
+        case  VMX_VMCALL_PRINTF:
+            print_fmt  =   tf->tf_regs.reg_rdx;
+            print_ap   =   tf->tf_regs.reg_rcx;
+            ept_pml4e_walk(curenv->env_pml4e, (void *)print_fmt, 0, &pte_fmt);
+            pp = pa2page((physaddr_t)(PTE_ADDR(*pte_fmt)));
+            print_fmt = (uint64_t) page2kva( pp );
+
+            ept_pml4e_walk(curenv->env_pml4e, (void *)print_ap, 0, &pte_ap);
+            pp = pa2page((physaddr_t)(PTE_ADDR(*pte_ap)));
+            print_ap = (uint64_t) page2kva( pp );
+
+            r = vcprintf((char *) print_fmt, *((va_list *) print_ap) );
+            tf->tf_regs.reg_rax = (uint64_t)r;
+
+           handled = true;
+           break;
     }
 
     if(handled) {
