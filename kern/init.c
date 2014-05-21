@@ -78,6 +78,8 @@ i386_init(void)
 	//mp_init();
 	//lapic_init();
 #endif
+        mp_init();
+	lapic_init();
 
 	// Lab 4 multitasking initialization functions
 	pic_init();
@@ -98,10 +100,12 @@ i386_init(void)
 	int i;
 	for (i = 0; i < NCPU; i++)
 		ENV_CREATE(user_idle, ENV_TYPE_IDLE);
-
+        
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
-	ENV_CREATE(user_testtime, ENV_TYPE_USER);
+        ENV_CREATE(net_ns, ENV_TYPE_NS);
+//	ENV_CREATE(user_testtime, ENV_TYPE_USER);
+	ENV_CREATE(user_httpd, ENV_TYPE_USER);
 	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_yield, ENV_TYPE_USER);
