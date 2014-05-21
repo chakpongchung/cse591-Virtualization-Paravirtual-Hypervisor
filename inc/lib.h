@@ -63,6 +63,8 @@ int	sys_ipc_recv(void *rcv_pg);
 unsigned int sys_time_msec(void);
 int sys_ept_map(envid_t srcenvid, void *srcva, envid_t guest, void* guest_pa, int perm);
 envid_t sys_env_mkguest(uint64_t gphysz, uint64_t gRIP);
+int sys_net_try_send(char *data, int len);
+int sys_net_try_receive(char *data, int *len);
 
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))

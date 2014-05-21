@@ -14,6 +14,7 @@
 #include <kern/sched.h>
 #include <kern/time.h>
 #include <vmm/ept.h>
+#include <kern/e1000.h>
 
 // Print a string to the system console.
 // The string is exactly 'len' characters long.
@@ -524,7 +525,10 @@ sys_ipc_recv(void *dstva)
 sys_time_msec(void)
 {
     // LAB 6: Your code here.
-    panic("sys_time_msec not implemented");
+    
+    return time_msec();
+
+    // panic("sys_time_msec not implemented");
 }
 
 // Maps a page from the evnironment corresponding to envid into the guest vm 
@@ -588,6 +592,31 @@ sys_ept_map(envid_t srcenvid, void *srcva,
     return ret;
 }
 
+int
+sys_net_try_send(char * data, int len)
+{
+	if ((uintptr_t)data >= UTOP)
+		return -E_INVAL;
+
+	return e1000_transmit(data, len);
+}
+
+int
+sys_net_try_receive(char *data, int *len){
+	int r;
+	
+	if ((uintptr_t)data >= UTOP) {
+		return -E_INVAL;
+	}
+	*len = e1000_receive(data);
+	 if (*len > 0) {
+		return 0;
+	}
+	
+	return *len;
+}
+
+
 static envid_t
 sys_env_mkguest(uint64_t gphysz, uint64_t gRIP) {
     int r;
@@ -645,8 +674,13 @@ syscall(uint64_t syscallno, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, 
 			return sys_time_msec();
 		case SYS_env_mkguest:
 			return sys_env_mkguest(a1, a2);
-                case SYS_ept_map:
-	    	    return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
+        case SYS_ept_map:
+	        return sys_ept_map(a1, (void*) a2, a3, (void*) a4, a5);
+		case SYS_net_try_send:
+			return sys_net_try_send((char *)a1, (int) a2);
+		case SYS_net_try_receive:
+			return sys_net_try_receive((char *)a1, (int *)a2);
+
 		/*case SYS_env_transmit_packet:
 			return sys_env_transmit_packet(a1, (char*)a2, a3);
 		case SYS_env_receive_packet:
