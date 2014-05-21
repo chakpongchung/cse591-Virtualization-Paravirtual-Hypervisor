@@ -270,8 +270,8 @@ x64_vm_init(void)
     // memory management will go through the page_* functions. In
     // particular, we can now map memory using boot_map_segment or page_insert
     page_init();
-	
-	check_page_free_list(1);
+
+        check_page_free_list(1);
 	check_page_alloc();
 	page_check();
 
@@ -1001,7 +1001,7 @@ check_page_alloc(void)
     page_free(pp1);
     page_free(pp2);
 
-    cprintf("check_page_alloc() succeeded!\n");
+//    cprintf("check_page_alloc() succeeded!\n");
 }
 
 //
@@ -1068,7 +1068,7 @@ check_boot_pml4e(pml4e_t *pml4e)
                 break;
         }
     }
-    cprintf("check_boot_pml4e() succeeded!\n");
+//    cprintf("check_boot_pml4e() succeeded!\n");
 }
 
 // This function returns the physical address of the page containing 'va',
@@ -1300,6 +1300,6 @@ page_check(void)
     *pml4e_walk(boot_pml4e, (void*) mm1 + PGSIZE, 0) = 0;
     *pml4e_walk(boot_pml4e, (void*) mm2, 0) = 0;
 
-    cprintf("check_page() succeeded!\n");
+//    cprintf("check_page() succeeded!\n");
 }
 
