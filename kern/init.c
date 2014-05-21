@@ -83,8 +83,8 @@ i386_init(void)
 	pic_init();
         //test_ept_map();
 	// Lab 6 hardware initialization functions
-	//time_init();
-	//pci_init();
+	time_init();
+	pci_init();
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
@@ -101,7 +101,7 @@ i386_init(void)
 
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
-	//ENV_CREATE(user_hello, ENV_TYPE_USER);
+	ENV_CREATE(user_testtime, ENV_TYPE_USER);
 	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_yield, ENV_TYPE_USER);
@@ -114,7 +114,7 @@ i386_init(void)
 	//ENV_CREATE(user_sendpage, ENV_TYPE_USER);
 	//ENV_CREATE(user_pingpong, ENV_TYPE_USER);
 	//ENV_CREATE(user_primes, ENV_TYPE_USER);
-	ENV_CREATE(user_icode, ENV_TYPE_USER);
+	//ENV_CREATE(user_icode, ENV_TYPE_USER);
 	//ENV_CREATE(user_console, ENV_TYPE_USER);
 
 
