@@ -62,11 +62,13 @@ i386_init(void)
 #endif
 
 	// Lab 4 multitasking initialization functions
+	mp_init();
+	lapic_init();
 	pic_init();
 
 	// Lab 6 hardware initialization functions
-	//time_init();
-	//pci_init();
+	time_init();
+	pci_init();
 
 	// Acquire the big kernel lock before waking up APs
 	// Your code here:
@@ -84,6 +86,7 @@ i386_init(void)
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
 	ENV_CREATE(user_hello, ENV_TYPE_USER);
+	//ENV_CREATE(user_testtime, ENV_TYPE_USER);
 	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_yield, ENV_TYPE_USER);

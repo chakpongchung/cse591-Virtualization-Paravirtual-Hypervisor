@@ -1,7 +1,7 @@
 #include <inc/ns.h>
 #include <inc/lib.h>
 
-#define IP "10.0.2.17"
+#define IP "10.0.2.20"
 #define MASK "255.255.255.0"
 #define DEFAULT "10.0.2.2"
 

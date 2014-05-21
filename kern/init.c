@@ -104,8 +104,8 @@ i386_init(void)
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
         ENV_CREATE(net_ns, ENV_TYPE_NS);
-//	ENV_CREATE(user_testtime, ENV_TYPE_USER);
-	ENV_CREATE(user_httpd, ENV_TYPE_USER);
+	//ENV_CREATE(user_testtime, ENV_TYPE_USER);
+	//ENV_CREATE(user_httpd, ENV_TYPE_USER);
 	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_yield, ENV_TYPE_USER);
@@ -118,7 +118,7 @@ i386_init(void)
 	//ENV_CREATE(user_sendpage, ENV_TYPE_USER);
 	//ENV_CREATE(user_pingpong, ENV_TYPE_USER);
 	//ENV_CREATE(user_primes, ENV_TYPE_USER);
-	//ENV_CREATE(user_icode, ENV_TYPE_USER);
+	ENV_CREATE(user_icode, ENV_TYPE_USER);
 	//ENV_CREATE(user_console, ENV_TYPE_USER);
 
 

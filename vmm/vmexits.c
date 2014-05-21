@@ -101,7 +101,22 @@ handle_eptviolation(uint64_t *eptrt, struct VmxGuestInfo *ginfo) {
 //         cprintf("EPT violation for gpa:%x mapped KVA:%x\n", gpa,(KERNBASE + CGA_BUF));
         assert(r >= 0);
         return true;
+    } else if (gpa >= 0xF0000  && gpa < 0xF0000 + 0x10000) {
+        // FIXME: This give direct access to VGA MMIO region.
+        r = ept_map_hva2gpa(eptrt, 
+                (void *)(KERNBASE + gpa), (void *)gpa, __EPTE_FULL, 0);
+//         cprintf("EPT violation for gpa:%x mapped KVA:%x\n", gpa,(KERNBASE + CGA_BUF));
+        assert(r >= 0);
+        return true;
+   } else if (gpa >= 0xfee00000) {
+        // FIXME: This give direct access to VGA MMIO region.
+        r = ept_map_hva2gpa(eptrt, 
+                (void *)(KERNBASE + gpa), (void *)gpa, __EPTE_FULL, 0);
+//         cprintf("EPT violation for gpa:%x mapped KVA:%x\n", gpa,(KERNBASE + CGA_BUF));
+        assert(r >= 0);
+        return true;
     } 
+
     return false;
 }
 
