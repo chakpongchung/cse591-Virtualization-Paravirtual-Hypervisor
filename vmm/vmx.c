@@ -380,7 +380,7 @@ void vmexit() {
     //exit_reason = vmcs_readl(VMCS_GUEST_RFLAGS);
 
     exit_reason = vmcs_read32(VMCS_32BIT_VMEXIT_REASON);
-//    cprintf( "---VMEXIT Reason: %d : %16x---\n", exit_reason, exit_reason & EXIT_REASON_MASK );
+    //cprintf( "---VMEXIT Reason: %d : %16x---\n", exit_reason, exit_reason & EXIT_REASON_MASK );
     //cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); 
     
      /* cprintf( "---VMEXIT Reason: %d---\n", exit_reason ); */
@@ -396,7 +396,6 @@ void vmexit() {
             break;
         case EXIT_REASON_EPT_VIOLATION:
             exit_handled = handle_eptviolation(curenv->env_pml4e, &curenv->env_vmxinfo);
-            cprintf("ept handled = %d", exit_handled);
             break;
         case EXIT_REASON_IO_INSTRUCTION:
             exit_handled = handle_ioinstr(&curenv->env_tf, &curenv->env_vmxinfo);
