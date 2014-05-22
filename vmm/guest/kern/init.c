@@ -85,7 +85,11 @@ i386_init(void)
 
 	// Start fs.
 	ENV_CREATE(fs_fs, ENV_TYPE_FS);
-	ENV_CREATE(user_hello, ENV_TYPE_USER);
+//	ENV_CREATE(user_hello, ENV_TYPE_USER);
+        ENV_CREATE(net_ns, ENV_TYPE_NS);
+        cprintf("PHANY:%d:%s\n", __LINE__, __FILE__);
+	//ENV_CREATE(user_testtime, ENV_TYPE_USER);
+	//ENV_CREATE(user_httpd, ENV_TYPE_USER);
 	//ENV_CREATE(user_testtime, ENV_TYPE_USER);
 	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
 	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
@@ -102,9 +106,10 @@ i386_init(void)
 	ENV_CREATE(user_icode, ENV_TYPE_USER);
 	//ENV_CREATE(user_console, ENV_TYPE_USER);
 
+        cprintf("PHANY:%d:%s\n", __LINE__, __FILE__);
 #if !defined(TEST_NO_NS) && !defined(VMM_GUEST)
 	// Start ns.
-	ENV_CREATE(net_ns, ENV_TYPE_NS);
+//	ENV_CREATE(net_ns, ENV_TYPE_NS);
 #endif
 
 #if defined(TEST)

@@ -14,6 +14,7 @@
 #include <kern/syscall.h>
 #include <kern/env.h>
 #include <inc/ept.h>
+#include <kern/e1000.h>
 
 bool
 find_msr_in_region(uint32_t msr_idx, uintptr_t *area, int area_sz, struct vmx_msr_entry **msr_entry) {
@@ -214,9 +215,9 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 {
     bool handled = false;
     multiboot_info_t mbinfo;
-    int perm, r, i;
+    int perm, r, i, buf_len = 0;
     void *gpa_pg, *hva_pg, *srcva;
-    uint64_t to_env;
+    uint64_t to_env, gpa ;
     uint32_t val;
     struct Page *page; 
     uintptr_t *hva;
@@ -332,6 +333,24 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    //cprintf("IPC send hypercall implemented\n");	    
 	    handled = true;
             break;
+
+        case VMX_VMCALL_NETSEND:
+
+            gpa  =   tf->tf_regs.reg_rdx;
+            buf_len  =   tf->tf_regs.reg_rcx;
+
+            ept_gpa2hva(eptrt, (void *) gpa, (void *) &hva);
+            cprintf("Data : %x  length = %d\n", gpa, buf_len);
+
+//            r = syscall(SYS_net_try_send, (uint64_t) hva, (uint64_t)tf->tf_regs.reg_rcx, (uint64_t)0, (uint64_t)0,(uint64_t)0) ; 
+            r = e1000_transmit((char *) hva, buf_len);
+
+            //cprintf("Data : %s  length = %d\n", hva, buf_len);
+            tf->tf_regs.reg_rax = (uint64_t)r;
+	    //cprintf("IPC send hypercall implemented\n");	    
+	    handled = true;
+            break;
+
 
         case VMX_VMCALL_IPCRECV:
 	    // Issue the sys_ipc_recv call for the guest.

@@ -63,6 +63,8 @@ unsigned int sys_time_msec(void);
 int sys_net_try_send(char *data, int len);
 int sys_net_try_receive(char *data, int *len);
 
+int64_t vm_call(int num, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5);
+
 // This must be inlined.  Exercise for reader: why?
 static __inline envid_t __attribute__((always_inline))
 sys_exofork(void)
