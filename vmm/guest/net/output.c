@@ -26,17 +26,20 @@ int32_t net_host_send(char *pg, int len) {
 output(envid_t ns_envid)
 {
     binaryname = "ns_output";
-
+    char *buf=(char *)malloc(sizeof(char) * 2048);
     // LAB 6: Your code here:
     // 	- read a packet from the network server
     //	- send the packet to the device driver
     int r;
+    int len = 0;
     while(1) {
         r = sys_ipc_recv(&nsipcbuf);
         if ( (thisenv->env_ipc_from != ns_envid) || (thisenv->env_ipc_value != NSREQ_OUTPUT)) {
             continue;
         }
-        while ((r = net_host_send( (char *)nsipcbuf.pkt.jp_data, nsipcbuf.pkt.jp_len)) != 0);
+        len=nsipcbuf.pkt.jp_len;
+        memmove(buf, nsipcbuf.pkt.jp_data, nsipcbuf.pkt.jp_len); 
+        while ((r = net_host_send( (char *)buf, len)) != 0);
     }
 
 }

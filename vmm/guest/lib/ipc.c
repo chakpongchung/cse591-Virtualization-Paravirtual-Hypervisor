@@ -37,10 +37,11 @@ vm_call(int num, uint64_t a1, uint64_t a2, uint64_t a3, uint64_t a4, uint64_t a5
                "D" (a4),
                "S" (a5)
              : "cc", "memory");
-  
+if (num != 5) 
+{
 	if(ret > 0)
           panic("vm_call %d returned %d (> 0)", num, ret);
-        else 
+}
            return ret; 
 
 }

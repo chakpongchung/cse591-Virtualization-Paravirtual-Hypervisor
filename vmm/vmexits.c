@@ -222,6 +222,8 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
     struct Page *page; 
     uintptr_t *hva;
     uint64_t value;
+    int len_tmp = 0;
+    char *pkt;
 
     // phys address of the multiboot map in the guest.
     uint64_t multiboot_map_addr = 0x6000;
@@ -342,7 +344,7 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
             ept_gpa2hva(eptrt, (void *) gpa, (void *) &hva);
             cprintf("Data : %x  length = %d\n", gpa, buf_len);
 
-//            r = syscall(SYS_net_try_send, (uint64_t) hva, (uint64_t)tf->tf_regs.reg_rcx, (uint64_t)0, (uint64_t)0,(uint64_t)0) ; 
+            //r = syscall(SYS_net_try_send, (uint64_t) hva, (uint64_t)tf->tf_regs.reg_rcx, (uint64_t)0, (uint64_t)0,(uint64_t)0) ; 
             r = e1000_transmit((char *) hva, buf_len);
 
             //cprintf("Data : %s  length = %d\n", hva, buf_len);
@@ -351,6 +353,39 @@ handle_vmcall(struct Trapframe *tf, struct VmxGuestInfo *gInfo, uint64_t *eptrt)
 	    handled = true;
             break;
 
+
+        case VMX_VMCALL_NETRECV:
+
+    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
+            gpa  =   tf->tf_regs.reg_rdx;
+//            value  = (uint64_t) tf->tf_regs.reg_rcx;
+    cprintf("PHANY:%d:%s gpaa = %x, \n", __LINE__, __FILE__, gpa);
+
+            ept_gpa2hva(eptrt, (void *) gpa, (void *) &hva);
+            //cprintf("Data : %x  length = %d\n", gpa, *((int *)value) );
+    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
+
+//            r = syscall(SYS_net_try_send, (uint64_t) hva, (uint64_t)tf->tf_regs.reg_rcx, (uint64_t)0, (uint64_t)0,(uint64_t)0) ; 
+            r = e1000_guest_receive((char *) hva, &len_tmp );
+            pkt = (char *) hva;
+cprintf("\n DATA IN VMEXIT e1000:\n[");
+    for (i = 0; i<len_tmp; i++)
+    {
+        cprintf(":%u", pkt[i]);
+    }
+    cprintf("]\n");
+
+    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
+            //cprintf("Data : %s  length = %d\n", hva, buf_len);
+            if ( r  == 0 )
+                  tf->tf_regs.reg_rax = (uint64_t) len_tmp ;
+            else
+                  tf->tf_regs.reg_rax = (uint64_t) 0x000 ;
+	    //cprintf("IPC send hypercall implemented\n");	    
+    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
+	    handled = true;
+            break;
+            
 
         case VMX_VMCALL_IPCRECV:
 	    // Issue the sys_ipc_recv call for the guest.
