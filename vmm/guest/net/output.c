@@ -38,7 +38,7 @@ output(envid_t ns_envid)
         }
         len=nsipcbuf.pkt.jp_len;
         memmove(buf, nsipcbuf.pkt.jp_data, nsipcbuf.pkt.jp_len); 
-        while ((r = net_host_send( (char *)buf, len)) != 0);
+        while ((r = net_host_send(buf, len)) != 0);
     }
 
 }
