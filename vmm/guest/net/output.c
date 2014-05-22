@@ -16,7 +16,6 @@ int32_t net_host_send(char *pg, int len) {
     {
         pg = (void *) PTE_ADDR( vpt[VPN(addr)] );
     }
-        cprintf("Data : %x  length = %d\n", pg, len);
 
     int ret =  vm_call( VMX_VMCALL_NETSEND, (uint64_t) pg , (uint64_t) len, 0, 0, 0 );
     return ret;

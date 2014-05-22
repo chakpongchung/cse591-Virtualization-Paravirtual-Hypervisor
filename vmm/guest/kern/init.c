@@ -90,21 +90,7 @@ i386_init(void)
         cprintf("PHANY:%d:%s\n", __LINE__, __FILE__);
 	//ENV_CREATE(user_testtime, ENV_TYPE_USER);
 	ENV_CREATE(user_httpd, ENV_TYPE_USER);
-	//ENV_CREATE(user_testtime, ENV_TYPE_USER);
-	//ENV_CREATE(user_buggyhello, ENV_TYPE_USER);
-	//ENV_CREATE(user_evilhello, ENV_TYPE_USER);
-	//ENV_CREATE(user_yield, ENV_TYPE_USER);
-	//ENV_CREATE(user_yield, ENV_TYPE_USER);
-	//	ENV_CREATE(user_dumbfork, ENV_TYPE_USER);
-	//	ENV_CREATE(user_faultread, ENV_TYPE_USER);
-	//	ENV_CREATE(user_faultdie, ENV_TYPE_USER);
-	//	ENV_CREATE(user_faultalloc, ENV_TYPE_USER);
-	//ENV_CREATE(user_forktree, ENV_TYPE_USER);
-	//ENV_CREATE(user_sendpage, ENV_TYPE_USER);
-	//ENV_CREATE(user_pingpong, ENV_TYPE_USER);
-	//ENV_CREATE(user_primes, ENV_TYPE_USER);
-	//ENV_CREATE(user_icode, ENV_TYPE_USER);
-	//ENV_CREATE(user_console, ENV_TYPE_USER);
+	ENV_CREATE(user_icode, ENV_TYPE_USER);
 
         cprintf("PHANY:%d:%s\n", __LINE__, __FILE__);
 #if !defined(TEST_NO_NS) && !defined(VMM_GUEST)

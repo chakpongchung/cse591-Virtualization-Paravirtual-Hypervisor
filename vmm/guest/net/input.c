@@ -17,19 +17,19 @@ int32_t net_host_recv(char *pg, int *len) {
     {
         pg = (void *) PTE_ADDR( vpt[VPN(addr)] );
     }
-        cprintf("Data : %x  length = %d\n", pg, *len);
+//        cprintf("Data : %x  length = %d\n", pg, *len);
 
-    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
+//    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
     int ret =  vm_call( VMX_VMCALL_NETRECV, (uint64_t) pg , (uint64_t) *len, 0, 0, 0 );
-    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
+//    cprintf("PHANY:%d:%s \n", __LINE__, __FILE__);
     pkt = (char *) addr;
-    cprintf("\n DATA IN GUEST INPUT.c e1000:\nlen [%d][", *len);
-    for (i = 0; i<*len; i++)
+//    cprintf("\n DATA IN GUEST INPUT.c e1000:\nlen [%d][", *len);
+/*    for (i = 0; i<*len; i++)
     {
         cprintf(":%u", pkt[i]);
     }
     cprintf("]\n");
- 
+*/ 
     if (ret == 0)   {
         *len = 0;
         return -1;
